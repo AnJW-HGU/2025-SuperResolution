@@ -28,6 +28,10 @@ def split_SR_output():
 def classification():
     subprocess.run(['python', 'Part2/ResNet50nAdaptivePooling.py'])
 
+# e2e
+def e2e_train_test():
+    subprocess.run(['python', 'Part3/E2E_inference.py'])
+
 if __name__ == "__main__":
     # print("-----split original-----")
     # split_original()
@@ -42,5 +46,8 @@ if __name__ == "__main__":
     # test_SR()
     # print("-----split SR output----")
     # split_SR_output()
-    print("-----classification-----")
-    classification()
+    # print("-----classification-----")
+    # classification()
+    print("-----e2e train test-----")
+    e2e_train_test()
+    # subprocess.run(['python', 'Part2/classification.py'])

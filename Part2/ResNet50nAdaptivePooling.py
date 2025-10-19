@@ -27,8 +27,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # === Adjust
 # Hyperparameters
-num_epochs = 5
-num_workers = 4
+num_epochs = 20
+num_workers = 12
 batch_size = 8  
 learning_rate = 0.001
 
@@ -49,13 +49,14 @@ transform_128 = transforms.Compose([
 print("Loading Real-ESRGAN datasets...")
 train_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/original', transform=transform_128)
 test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/SR/test', transform=transform_128)
+# test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/original', transform=transform_128)
 
 targets = np.array(train_dataset_Real_ESRGAN.targets)
 indices = []
 
 for c in range(len(train_dataset_Real_ESRGAN.classes)):
     class_indices = np.where(targets == c) [0]
-    sample_size = max(1, int(len(class_indices) * 0.1))
+    sample_size = max(1, int(len(class_indices) * 0.2))
     sampled = random.sample(list(class_indices), sample_size)
     indices.extend(sampled)
 small_dataset_Real_ESRGAN = Subset(train_dataset_Real_ESRGAN, indices)
@@ -154,14 +155,19 @@ if __name__ == "__main__":
     train(model_Real_ESRGAN, optimizer_Real_ESRGAN, small_train_loader_Real_ESRGAN)
     print("Training completed. Starting testing phase...")
 
-    torch.save(model_Real_ESRGAN.state_dict(), "models/2_stage_model_state_dict01_5.pth")
-    torch.save(model_Real_ESRGAN, "models/2_stage_model01_5.pth")
+    torch.save(model_Real_ESRGAN.state_dict(), "models/2_stage_model_state_dict_5000_02_20.pth")
+    torch.save(model_Real_ESRGAN, "models/2_stage_model_5000_02_20.pth")
+
+    test_model = torch.load("models/2_stage_model_5000_02_20.pth").to(device)
+    # test_model = models.resnet50(pretrained=False)
+    # test_model.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
+    test_model.load_state_dict(torch.load("models/2_stage_model_state_dict_5000_02_20.pth"))
     # Get class names
     class_names_Real_ESRGAN = train_dataset_Real_ESRGAN.classes
 
     # === Adjust: Print 
     # Test the model and display results
-    accuracy_Real_ESRGAN, precision_Real_ESRGAN, recall_Real_ESRGAN = test(model_Real_ESRGAN, test_loader_Real_ESRGAN, class_names_Real_ESRGAN)
+    accuracy_Real_ESRGAN, precision_Real_ESRGAN, recall_Real_ESRGAN = test(test_model, test_loader_Real_ESRGAN, class_names_Real_ESRGAN)
     print(f"\nOverall Accuracy for Real-ESRGAN dataset: {accuracy_Real_ESRGAN * 100:.2f}%")
     print(f"Overall Precision for Real-ESRGAN dataset: {precision_Real_ESRGAN * 100:.2f}%")
     print(f"Overall Recall for Real-ESRGAN dataset: {recall_Real_ESRGAN * 100:.2f}%")

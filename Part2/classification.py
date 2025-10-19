@@ -13,8 +13,12 @@ import torch
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
+import torch.nn.functional as F
 from torch import nn, optim
 from torch.utils.data import DataLoader
+from torch.utils.data import Subset
+import random
+import numpy as np
 from sklearn.metrics import precision_score, recall_score
 
 # === Adjust: GPU number
@@ -24,6 +28,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # === Adjust
 # Hyperparameters
 num_epochs = 20
+num_workers = 12
 batch_size = 8  
 learning_rate = 0.001
 
@@ -34,18 +39,37 @@ transform_576 = transforms.Compose([
     transforms.ToTensor(),
 ])
 
+transform_128 = transforms.Compose([
+    transforms.Resize((128, 128)),
+    transforms.ToTensor(),
+])
+
 # === Adjust: Dataset, Folder path
 # Load training and testing datasets (Real-ESRGAN dataset)
 print("Loading Real-ESRGAN datasets...")
-train_dataset_Real_ESRGAN = datasets.ImageFolder('../../CS_dataset/CS_classification_dataset/Real-ESRGAN/train', transform=transform_576)
-test_dataset_Real_ESRGAN = datasets.ImageFolder('../../CS_dataset/CS_classification_dataset/Real-ESRGAN/test', transform=transform_576)
+train_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/original', transform=transform_128)
+# test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/SR/test', transform=transform_128)
+test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/original', transform=transform_128)
 
-train_loader_Real_ESRGAN = DataLoader(train_dataset_Real_ESRGAN, batch_size=batch_size, shuffle=True)
+targets = np.array(train_dataset_Real_ESRGAN.targets)
+indices = []
+
+for c in range(len(train_dataset_Real_ESRGAN.classes)):
+    class_indices = np.where(targets == c) [0]
+    sample_size = max(1, int(len(class_indices) * 0.2))
+    sampled = random.sample(list(class_indices), sample_size)
+    indices.extend(sampled)
+small_dataset_Real_ESRGAN = Subset(train_dataset_Real_ESRGAN, indices)
+
+# train_loader_Real_ESRGAN = DataLoader(train_dataset_Real_ESRGAN, batch_size=batch_size, shuffle=True)
+small_train_loader_Real_ESRGAN = DataLoader(train_dataset_Real_ESRGAN, 
+                                            num_workers=num_workers, batch_size=batch_size, 
+                                            shuffle=True)
 test_loader_Real_ESRGAN = DataLoader(test_dataset_Real_ESRGAN, batch_size=batch_size, shuffle=False)
 
 # === Adjust: Model Name
 # Configure the ResNet model for the Real-ESRGAN dataset
-model_Real_ESRGAN = models.resnet50(pretrained=True)
+model_Real_ESRGAN = models.resnet50(pretrained=False)
 model_Real_ESRGAN.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
 model_Real_ESRGAN = model_Real_ESRGAN.to(device)
 
@@ -125,17 +149,25 @@ def test(model, test_loader, class_names):
 
     return accuracy, precision, recall
 
-# Train and test using the Real-ESRGAN dataset
-print("Starting training phase...")
-train(model_Real_ESRGAN, optimizer_Real_ESRGAN, train_loader_Real_ESRGAN)
-print("Training completed. Starting testing phase...")
+if __name__ == "__main__":
+    # Train and test using the Real-ESRGAN dataset
+    print("Starting training phase...")
+    train(model_Real_ESRGAN, optimizer_Real_ESRGAN, small_train_loader_Real_ESRGAN)
+    print("Training completed. Starting testing phase...")
 
-# Get class names
-class_names_Real_ESRGAN = train_dataset_Real_ESRGAN.classes
+    torch.save(model_Real_ESRGAN.state_dict(), "models/original_state_dict_02_20.pth")
+    torch.save(model_Real_ESRGAN, "models/original_02_20.pth")
 
-# === Adjust: Print 
-# Test the model and display results
-accuracy_Real_ESRGAN, precision_Real_ESRGAN, recall_Real_ESRGAN = test(model_Real_ESRGAN, test_loader_Real_ESRGAN, class_names_Real_ESRGAN)
-print(f"\nOverall Accuracy for Real-ESRGAN dataset: {accuracy_Real_ESRGAN * 100:.2f}%")
-print(f"Overall Precision for Real-ESRGAN dataset: {precision_Real_ESRGAN * 100:.2f}%")
-print(f"Overall Recall for Real-ESRGAN dataset: {recall_Real_ESRGAN * 100:.2f}%")
+    test_model = torch.load("models/original_02_20.pth").to(device)
+    # test_model = models.resnet50(pretrained=False)
+    # test_model.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
+    test_model.load_state_dict(torch.load("models/original_state_dict_02_20.pth"))
+    # Get class names
+    class_names_Real_ESRGAN = train_dataset_Real_ESRGAN.classes
+
+    # === Adjust: Print 
+    # Test the model and display results
+    accuracy_Real_ESRGAN, precision_Real_ESRGAN, recall_Real_ESRGAN = test(test_model, test_loader_Real_ESRGAN, class_names_Real_ESRGAN)
+    print(f"\nOverall Accuracy for Real-ESRGAN dataset: {accuracy_Real_ESRGAN * 100:.2f}%")
+    print(f"Overall Precision for Real-ESRGAN dataset: {precision_Real_ESRGAN * 100:.2f}%")
+    print(f"Overall Recall for Real-ESRGAN dataset: {recall_Real_ESRGAN * 100:.2f}%")

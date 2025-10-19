@@ -28,7 +28,7 @@ model = RealESRGANModel(opt)
 
 # === Adjust: File Path
 # Path to the model weights
-pth_path = 'external/Real-ESRGAN/experiments/finetune_RealESRGANx4plus_100_pairdata/models/net_g_latest.pth'
+pth_path = 'external/Real-ESRGAN/experiments/finetune_RealESRGANx4plus_5k_pairdata_archived_20251019_191430/models/net_g_5000.pth'
 
 # Load the model weights
 checkpoint = torch.load(pth_path)

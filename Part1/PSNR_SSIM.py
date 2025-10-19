@@ -15,8 +15,8 @@ from skimage.metrics import structural_similarity as ssim
 
 # === Adjust: file path
 # File paths for the original high-resolution image and the downsampled image
-original_image_path = "GT_E_0187.jpeg"  # Path to the original high-resolution image
-low_res_image_path = "SRGAN_0187.jpeg"  # Path to the restored high-resolution image
+original_image_path = "dataset\gt/train/20190531_120229_0.jpg"  # Path to the original high-resolution image
+low_res_image_path = "20190531_120229_0.jpg"  # Path to the restored high-resolution image
 
 # Lists to store PSNR and SSIM values
 psnr_values = []

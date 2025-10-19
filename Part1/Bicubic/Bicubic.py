@@ -13,8 +13,8 @@ from pathlib import Path
 
 # === Adjust: Folder Paths
 # Paths for input (low-resolution) and output (high-resolution) datasets
-base_input_folder = '../capstone_code/dataset_pre_processing/CS_LR_144'  # Path to low-resolution images
-base_output_folder = '../capstone_code/dataset_pre_processing/CS_Bicubic'  # Path to save results
+base_input_folder = 'dataset/lq'  # Path to low-resolution images
+base_output_folder = 'dataset/Bicudic/output'  # Path to save results
 # Resize scale (e.g., 4x upscaling)
 scale = 4
 

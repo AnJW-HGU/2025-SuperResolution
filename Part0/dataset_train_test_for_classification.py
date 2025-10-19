@@ -37,10 +37,13 @@ def create_test_dataset_from_txt(txt_test, original_dir, test_dataset_dir):
     # Create test dataset
     for img_path in test_images:
         img_basename = os.path.basename(img_path)
+        print(img_basename)
         src = os.path.join(original_dir, img_basename)
         dst = os.path.join(test_dataset_dir, img_path)
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        shutil.copy2(src, dst)
+
+        if os.path.exists(src):
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(src, dst)
 
 # === Adjust: Folder Paths
 # Paths for the dataset and output directories
