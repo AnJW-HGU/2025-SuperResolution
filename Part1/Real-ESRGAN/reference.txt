@@ -1,0 +1,9 @@
+@InProceedings{wang2021realesrgan,
+    author    = {Xintao Wang and Liangbin Xie and Chao Dong and Ying Shan},
+    title     = {Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data},
+    booktitle = {International Conference on Computer Vision Workshops (ICCVW)},
+    date      = {2021}
+}
+
+The training process of Real-ESRGAN on paired high-resolution and low-resolution datasets was referenced from 
+the "Finetune Real-ESRGAN on your dataset - Use paired training data" section in docs/Training.md.
