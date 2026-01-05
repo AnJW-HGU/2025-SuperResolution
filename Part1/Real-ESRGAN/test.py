@@ -14,7 +14,7 @@ from realesrgan.models.realesrgan_model import RealESRGANModel
 
 # === Adjust: File Path
 # Path to the configuration file
-yml_path = 'external/Real-ESRGAN/experiments/finetune_RealESRGANx4plus_100_pairdata/finetune_realesrgan_x4plus_pairdata.yml'
+yml_path = 'external/Real-ESRGAN/experiments/2_Stage_5k_all_loss/finetune_realesrgan_x4plus_pairdata.yml'
 
 # Load settings from the YML file
 with open(yml_path, 'r') as f:
@@ -28,7 +28,7 @@ model = RealESRGANModel(opt)
 
 # === Adjust: File Path
 # Path to the model weights
-pth_path = 'external/Real-ESRGAN/experiments/finetune_RealESRGANx4plus_5k_pairdata_archived_20251019_191430/models/net_g_5000.pth'
+pth_path = 'external/Real-ESRGAN/experiments/2_Stage_5k_all_loss/models/net_g_5000.pth'
 
 # Load the model weights
 checkpoint = torch.load(pth_path)

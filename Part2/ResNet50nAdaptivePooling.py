@@ -27,7 +27,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # === Adjust
 # Hyperparameters
-num_epochs = 20
+num_epochs = 10
 num_workers = 12
 batch_size = 8  
 learning_rate = 0.001
@@ -47,7 +47,7 @@ transform_128 = transforms.Compose([
 # === Adjust: Dataset, Folder path
 # Load training and testing datasets (Real-ESRGAN dataset)
 print("Loading Real-ESRGAN datasets...")
-train_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/original', transform=transform_128)
+train_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/SR/train', transform=transform_128)
 test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/SR/test', transform=transform_128)
 # test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/original', transform=transform_128)
 
@@ -155,13 +155,13 @@ if __name__ == "__main__":
     train(model_Real_ESRGAN, optimizer_Real_ESRGAN, small_train_loader_Real_ESRGAN)
     print("Training completed. Starting testing phase...")
 
-    torch.save(model_Real_ESRGAN.state_dict(), "models/2_stage_model_state_dict_5000_02_20.pth")
-    torch.save(model_Real_ESRGAN, "models/2_stage_model_5000_02_20.pth")
+    torch.save(model_Real_ESRGAN.state_dict(), "models/2_Stage_5k_all_loss_state_dict.pth")
+    torch.save(model_Real_ESRGAN, "models/2_Stage_5k_all_loss.pth")
 
-    test_model = torch.load("models/2_stage_model_5000_02_20.pth").to(device)
+    test_model = torch.load("models/2_Stage_5k_all_loss.pth").to(device)
     # test_model = models.resnet50(pretrained=False)
     # test_model.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
-    test_model.load_state_dict(torch.load("models/2_stage_model_state_dict_5000_02_20.pth"))
+    test_model.load_state_dict(torch.load("models/2_Stage_5k_all_loss_state_dict.pth"))
     # Get class names
     class_names_Real_ESRGAN = train_dataset_Real_ESRGAN.classes
 
