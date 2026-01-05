@@ -1,6 +1,10 @@
 import subprocess
 import torch
 
+# dataset/originals의 파일 수를 줄임
+def reduce_originals():
+    subprocess.run(['python', 'Part0/reduce_dataset.py'])
+
 # dataset/original을 gt/train, gt/test로 분리
 def split_original():
     subprocess.run(['python', 'Part0/dataset_train_test_txt.py'])
@@ -33,6 +37,8 @@ def e2e_train_test():
     subprocess.run(['python', 'Part3/E2E_inference.py'])
 
 if __name__ == "__main__":
+    # print("-----reduce dataset-----")
+    # reduce_originals()
     # print("-----split original-----")
     # split_original()
     # print("-----degradation--------")
