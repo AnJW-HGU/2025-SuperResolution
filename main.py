@@ -7,15 +7,15 @@ def reduce_originals():
 
 # dataset/original을 gt/train, gt/test로 분리
 def split_original():
-    subprocess.run(['python', 'Part0/dataset_train_test_txt.py'])
+    subprocess.run(['python', 'Part0/dataset_train_test_for_e2e.py'])
 
 # gt/train, gt/test -> lq/train, lq/test
 def degradation():
-    subprocess.run(['python', 'Part0/degradation_folder_for_super_resolution.py'])
+    subprocess.run(['python', 'Part0/degradation_folder_for_e2e.py'])
 
 # meta info pairdata 만들기
 def generate_meta_info_pairdata():
-    subprocess.run(['python', 'external/Real-ESRGAN/scripts/generate_meta_info_pairdata.py', '--input', 'dataset/gt/train', 'dataset/lq/train', '--meta_info', 'dataset/meta_info/meta_info_RE_pair.txt'])
+    subprocess.run(['python', 'external/Real-ESRGAN/scripts/generate_meta_info_pairdata_with_label.py', '--input', 'dataset/gt/train', 'dataset/lq/train', '--meta_info', 'dataset/meta_info/meta_info_RE_pair.txt'])
 
 # Real-ESRGAN 학습
 def train_SR():
@@ -32,19 +32,16 @@ def split_SR_output():
 def classification():
     subprocess.run(['python', 'Part2/ResNet50nAdaptivePooling.py'])
 
-# e2e
-def e2e_train_test():
-    subprocess.run(['python', 'Part3/E2E_inference.py'])
 
 if __name__ == "__main__":
-    # print("-----reduce dataset-----")
-    # reduce_originals()
-    # print("-----split original-----")
-    # split_original()
-    # print("-----degradation--------")
-    # degradation()
-    # print("-----pairdata-----------")
-    # generate_meta_info_pairdata()
+    print("-----reduce dataset-----")
+    reduce_originals()
+    print("-----split original-----")
+    split_original()
+    print("-----degradation--------")
+    degradation()
+    print("-----pairdata-----------")
+    generate_meta_info_pairdata()
     # torch.cuda.empty_cache()
     # print("-----train--------------")
     # train_SR()
@@ -54,6 +51,3 @@ if __name__ == "__main__":
     # split_SR_output()
     # print("-----classification-----")
     # classification()
-    print("-----e2e train test-----")
-    e2e_train_test()
-    # subprocess.run(['python', 'Part2/classification.py'])
