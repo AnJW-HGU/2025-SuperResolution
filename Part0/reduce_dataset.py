@@ -40,6 +40,9 @@ def reduce_dataset():
     
 if __name__ == "__main__":
     reduce_dataset()
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 32a76eee4a7dbd72c1b8cdafb62fdbcb30902fbc
