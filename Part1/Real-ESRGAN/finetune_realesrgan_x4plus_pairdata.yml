@@ -1,46 +1,39 @@
-# Class       : 2024-2 Mechatronics Integration Project
-# Created     : 11/18/2024
-# Modified by : Eunji Ko
-# Number      : 22100034
-# Description:
-#
-#               - This code modify options/finetune_realesrgan_x4plus.yml accordingly, especially the datasets part:
-#               - Modify the "# === Adjust" section to suit your dataset and environment.
----
 # general settings
-name: finetune_RealESRGANx4plus_400k_pairdata
+name: 2_Stage_5k_all_loss
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
 manual_seed: 0
-is_train: false
+
+# USM the ground-truth
+l1_gt_usm: True
+percep_gt_usm: True
+gan_gt_usm: False
+
+high_order_degradation: False # do not use the high-order degradation generation process
 
 # dataset and data loader settings
 datasets:
   train:
     name: DIV2K
     type: RealESRGANPairedDataset
-    # === Adjust: modify to the root path of your folder
-    dataroot_gt: dataset/ownpairdata
-    dataroot_lq: dataset/ownpairdata
-    meta_info: dataset/ownpairdata/meta_info/meta_pair.txt # make this file before train.
-
+    dataroot_gt: dataset
+    dataroot_lq: dataset
+    meta_info: dataset/meta_info/meta_info_RE_pair.txt
     io_backend:
       type: disk
-    # === Adjust: ground truth image size
+
     gt_size: 256
     use_hflip: True
     use_rot: False
 
-    # === Adjust: hyper parameters
     # data loader
     use_shuffle: true
-    num_worker_per_gpu: 5
-    batch_size_per_gpu: 8
+    num_worker_per_gpu: 8
+    batch_size_per_gpu: 4
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
-  # === Adjust: Only train and test
   # Uncomment these for validation
   # val:
   #   name: validation
@@ -59,43 +52,43 @@ network_g:
   num_block: 23
   num_grow_ch: 32
 
-
 network_d:
   type: UNetDiscriminatorSN
   num_in_ch: 3
   num_feat: 64
   skip_connection: True
 
-
 # path
 path:
-  pretrain_network_g: ../experiments/pretrained_models/RealESRGAN_x4plus.pth # check the path
+  # use the pre-trained Real-ESRNet model
+  pretrain_network_g: external/Real-ESRGAN/experiments/pretrained_models/RealESRGAN_x4plus.pth
   param_key_g: params_ema
   strict_load_g: true
+  # pretrain_network_d: external/Real-ESRGAN/experiments/pretrained_models/RealESRGAN_x4plus_netD.pth
+  # param_key_d: params
+  # strict_load_d: true
+  # resume_state: ~
 
 # training settings
 train:
   ema_decay: 0.999
   optim_g:
     type: Adam
-    # === Adjust: running rate
     lr: !!float 1e-4
     weight_decay: 0
     betas: [0.9, 0.99]
   optim_d:
     type: Adam
-    # === Adjust: running rate
     lr: !!float 1e-4
     weight_decay: 0
     betas: [0.9, 0.99]
 
   scheduler:
     type: MultiStepLR
-    milestones: [400000]
+    milestones: [5000]
     gamma: 0.5
 
-  # === Adjust: total iteration number
-  total_iter: 200000
+  total_iter: 5000
   warmup_iter: -1  # no warm up
 
   # losses
@@ -155,4 +148,3 @@ logger:
 dist_params:
   backend: nccl
   port: 29500
-
