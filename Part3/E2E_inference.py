@@ -88,7 +88,7 @@ generator.load_state_dict(torch.load('external\Real-ESRGAN\experiments/finetune_
 generator.eval()
 
 # Classifier 불러오기
-classifier = models.resnet50(pretrained=False)
+classifier = models.resnet50(pretrained=True)
 classifier.fc = torch.nn.Linear(classifier.fc.in_features, len(train_dataset.classes))
 # classifier.load_state_dict(torch.load('classifier.pth', map_location=device))
 # classifier.eval()
@@ -166,8 +166,8 @@ def test(model, test_loader, class_names):
     accuracy = correct / total
 
     # Calculate precision and recall per class
-    precision_per_class = precision_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None)
-    recall_per_class = recall_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None)
+    precision_per_class = precision_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None, zero_division=0)
+    recall_per_class = recall_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None, zero_division=0)
 
     # Print per-class metrics
     print("\nClass-wise Metrics:")
@@ -194,7 +194,8 @@ if __name__ == "__main__":
     # torch.save(model_e2e.state_dict(), "models/E2E_model_state_dict_5000_02_20.pth")
     # torch.save(model_e2e, "models/E2E_model_5000_02_20.pth")
 
-    test_model = torch.load("models/E2E_model_5000_02_20.pth").to(device)
+    # test_model = torch.load("models/E2E_model_5000_02_20.pth").to(device)
+    model_e2e.load_state_dict(torch.load("models/E2E_model_state_dict_5000_02_20.pth"))
     # test_model = models.resnet50(pretrained=True)
     # test_model.fc = nn.Linear(test_model.fc.in_features, len(train_dataset.classes))
     # Get class names
@@ -202,7 +203,7 @@ if __name__ == "__main__":
 
     # === Adjust: Print 
     # Test the model and display results
-    accuracy_RE, precision_RE, recall_RE = test(test_model, test_loader, class_names)
+    accuracy_RE, precision_RE, recall_RE = test(model_e2e, test_loader, class_names)
     print(f"\nOverall Accuracy for Real-ESRGAN dataset: {accuracy_RE * 100:.2f}%")
     print(f"Overall Precision for Real-ESRGAN dataset: {precision_RE * 100:.2f}%")
     print(f"Overall Recall for Real-ESRGAN dataset: {recall_RE * 100:.2f}%")
