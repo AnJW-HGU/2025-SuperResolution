@@ -15,7 +15,7 @@ def apply_degradation(image):
     blur1 = cv2.GaussianBlur(hr_resized, (15, 15), 0)
     
     # Step 3: Downsample to target LR size using bicubic interpolation
-    lr_resized = cv2.resize(blur1, (144, 144), interpolation=cv2.INTER_CUBIC)
+    lr_resized = cv2.resize(blur1, (64, 64), interpolation=cv2.INTER_CUBIC)
 
     # Step 4: Add Gaussian noise
     noise = np.random.normal(0, 25, lr_resized.shape).astype(np.uint8)

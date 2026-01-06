@@ -1,5 +1,9 @@
+# GENERATE TIME: Wed Jan  7 01:42:53 2026
+# CMD:
+# external/Real-ESRGAN/realesrgan/train.py -opt external/Real-ESRGAN/options/finetune_realesrgan_x4plus_pairdata.yml --auto_resume
+
 # general settings
-name: E2E_200_all_loss
+name: E2E_200_cls_loss
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1

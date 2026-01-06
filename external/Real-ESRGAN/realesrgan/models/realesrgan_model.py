@@ -14,7 +14,7 @@ from torch.nn import functional as F
 
 # === Adjust
 # Hyperparameters
-learning_rate = 0.001
+learning_rate = 0.1
 
 
 @MODEL_REGISTRY.register()
@@ -281,6 +281,8 @@ class RealESRGANModel(SRGANModel):
             l_g_total.backward()
             self.optimizer_g.step()
             self.optimizer_cls.step()
+        if current_iter % 10:
+            print(f"Current Iter: {current_iter}, l1Loss: {loss_dict['l_g_pix']}, perLoss: {loss_dict['l_g_percep']}, ganLoss: {loss_dict['l_g_gan']}, clsLoss: {loss_dict['l_g_cls']}")
 
         # optimize net_d
         for p in self.net_d.parameters():

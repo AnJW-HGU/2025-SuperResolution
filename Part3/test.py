@@ -1,15 +1,13 @@
 import os
 import torch
-from basicsr.archs.rrdbnet_arch import RRDBNet
+import yaml
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-import torch.nn.functional as F
-from torch import nn, optim
+from PIL import Image
+from torch import nn
 from torch.utils.data import DataLoader
-from torch.utils.data import Subset
-import random
-import numpy as np
+from realesrgan.models.realesrgan_model import RealESRGANModel
 from sklearn.metrics import precision_score, recall_score
 
 # === Adjust: GPU number
@@ -18,26 +16,73 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # === Adjust
 # Hyperparameters
-num_epochs = 10
-num_workers = 12
 batch_size = 4 
-learning_rate = 0.001
+
+yml_path = 'external/Real-ESRGAN\experiments/E2E_200_all_loss/finetune_realesrgan_x4plus_pairdata.yml'
+
+with open(yml_path, 'r') as f:
+    opt = yaml.load(f, Loader=yaml.FullLoader)
+
+# Add 'dist' key
+opt['dist'] = False
+opt['is_train'] = False
+
+model = RealESRGANModel(opt)
+
+# === Adjust: File Path
+# Path to the model weights
+pth_g_path = 'external/Real-ESRGAN/experiments/E2E_200_all_loss/models/net_g_latest.pth'
+pth_cls_path = 'external/Real-ESRGAN/experiments/E2E_200_all_loss/models/net_cls_latest.pth'
+
+# Load the model weights
+checkpoint_g = torch.load(pth_g_path)
+checkpoint_cls = torch.load(pth_cls_path)
+model.net_g.load_state_dict(checkpoint_g['params_ema']) 
+# model.net_cls.load_state_dict(checkpoint_cls['params_ema']) 
+
+# Confirm the model is loaded
+print("Model weights loaded successfully.")
+
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model.net_g.to(device)
+model.net_cls.to(device)
+model.net_g.eval()
+model.net_cls.eval()
+
 
 # === Adjust: Input Image Size 
-transform_128 = transforms.Compose([
-    transforms.Resize((128, 128)),
+transform_64 = transforms.Compose([
+    transforms.Resize((64, 64)),
     transforms.ToTensor(),
 ])
 
 # === Adjust: Dataset, Folder path
-test_dataset = datasets.ImageFolder('dataset/lq/test', transform=transform_128)
-
+test_dataset = datasets.ImageFolder('dataset/lq/test', transform=transform_64)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
+def load_image(image_path):
+    img = Image.open(image_path).convert('RGB')
+    transform = transforms.ToTensor()  # Convert image to tensor
+    img_tensor = transform(img).unsqueeze(0)  # Add batch dimension
+    return img_tensor.to(device)
+
+# Save an image
+def save_image(tensor, output_path):
+    tensor = tensor.squeeze(0).cpu().detach()  # Remove batch dimension
+    img = transforms.ToPILImage()(tensor)  # Convert tensor to image
+    img.save(output_path)
+
+def upscale_image(lr_image_path, sr_image_path):
+    lr_image = load_image(lr_image_path)
+    with torch.no_grad():  # Disable gradient computation
+        sr_image = model.net_g(lr_image)  # Generate high-resolution image
+    save_image(sr_image, sr_image_path)
+
 # Testing function (includes accuracy, precision, recall, and per-class metrics)
-def test(model_g, model_cls, test_loader, class_names):
-    model_g.eval()
-    model_cls.eval()
+def test(model, test_loader, class_names):
+    model.net_g.eval()
+    model.net_cls.eval()
     correct = 0
     total = 0
     class_correct = [0] * len(class_names)
@@ -48,8 +93,8 @@ def test(model_g, model_cls, test_loader, class_names):
     with torch.no_grad():
         for images, labels in test_loader:
             images, labels = images.to(device), labels.to(device)
-            g_outputs = model_g(images)
-            cls_outputs = model_cls(g_outputs.data)
+            sr_images = model.net_g(images)
+            cls_outputs = model.net_cls(sr_images.data)
             _, predicted = torch.max(cls_outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
@@ -86,36 +131,36 @@ def test(model_g, model_cls, test_loader, class_names):
 
     return accuracy, precision, recall
 
-if __name__ == "__main__":
 
-    test_model_g = RRDBNet(
-        num_in_ch=3, num_out_ch=3, num_feat=64, 
-        num_block=23, num_grow_ch=32, scale=4
-    ).to(device)
+# Get class names
+class_names_dataset = test_dataset.classes
 
-    num_classes = len(test_dataset.classes)
-    test_model_cls = models.resnet50(pretrained=False).to(device)
-    test_model_cls.fc = nn.Linear(test_model_cls.fc.in_features, num_classes).to(device)
-
-    def load_weights(model, path):
-        checkpoint = torch.load(path, map_location=device)
-        # BasicSR 저장 방식: 'params' 키 안에 가중치가 있음
-        if 'params' in checkpoint:
-            model.load_state_dict(checkpoint['params'], strict=True)
-        else:
-            model.load_state_dict(checkpoint, strict=True)
-        print(f"Loaded: {path}")
+# === Adjust: Print 
+# Test the model and display results
+accuracy_e2e, precision_e2e, recall_e2e = test(model, test_loader, class_names_dataset)
+print(f"\nOverall Accuracy for dataset: {accuracy_e2e * 100:.2f}%")
+print(f"Overall Precision for dataset: {precision_e2e * 100:.2f}%")
+print(f"Overall Recall for dataset: {recall_e2e * 100:.2f}%")
 
 
-    load_weights(test_model_g, r"external\Real-ESRGAN\experiments\E2E_1_all_loss\models\net_g_latest.pth")
-    load_weights(test_model_cls, r"external\Real-ESRGAN\experiments\E2E_1_all_loss\models\net_cls_latest.pth")
+# === Adjust: Save sr images
+input_test_base_path = 'dataset/lq/test'
+output_test_base_path = 'dataset/SR/output/test'
 
-    # Get class names
-    class_names = test_dataset.classes
+os.makedirs(output_test_base_path, exist_ok=True)
 
-    # === Adjust: Print 
-    # Test the model and display results
-    accuracy_e2e, precision_e2e, recall_e2e = test(test_model_g, test_model_cls, test_loader, class_names)
-    print(f"\nOverall Accuracy for dataset: {accuracy_e2e * 100:.2f}%")
-    print(f"Overall Precision for dataset: {precision_e2e * 100:.2f}%")
-    print(f"Overall Recall for dataset: {recall_e2e * 100:.2f}%")
+# Process each image in the class folder
+for class_name in os.listdir(input_test_base_path):
+    lr_image_dir = os.path.join(input_test_base_path, class_name)
+    sr_image_dir = os.path.join(output_test_base_path, class_name)
+
+    os.makedirs(sr_image_dir, exist_ok=True)
+
+    for image_name in os.listdir(lr_image_dir):
+        lr_image_path = os.path.join(lr_image_dir, image_name)  # Path to the low-resolution image
+        output_image_path = os.path.join(sr_image_dir, image_name)  # Path to save the high-resolution image
+
+        # Upscale and save the image
+        upscale_image(lr_image_path, output_image_path)
+
+print("All images have been processed and saved.")
