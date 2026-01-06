@@ -14,7 +14,7 @@ from realesrgan.models.realesrgan_model import RealESRGANModel
 
 # === Adjust: File Path
 # Path to the configuration file
-yml_path = 'external/Real-ESRGAN/experiments/2_Stage_5k_all_loss/finetune_realesrgan_x4plus_pairdata.yml'
+yml_path = 'external/Real-ESRGAN/experiments/2_Stage_5k_L1_loss/finetune_realesrgan_x4plus_pairdata.yml'
 
 # Load settings from the YML file
 with open(yml_path, 'r') as f:
@@ -28,7 +28,7 @@ model = RealESRGANModel(opt)
 
 # === Adjust: File Path
 # Path to the model weights
-pth_path = 'external/Real-ESRGAN/experiments/2_Stage_5k_all_loss/models/net_g_5000.pth'
+pth_path = 'external/Real-ESRGAN/experiments/2_Stage_5k_L1_loss/models/net_g_latest.pth'
 
 # Load the model weights
 checkpoint = torch.load(pth_path)
@@ -69,8 +69,10 @@ def upscale_image(model, lr_image_path, output_path):
 
 # === Adjust: Folder Path
 # Input and output folder paths
-input_base_path = 'dataset/lq/test'  # Low-resolution image folder
-output_base_path = 'dataset/SR/output'  # High-resolution image output folder
+input_train_base_path = 'dataset/lq/train'  # Low-resolution image folder
+output_train_base_path = 'dataset/SR/output/train'  # High-resolution image output folder
+input_test_base_path = 'dataset/lq/test'  # Low-resolution image folder
+output_test_base_path = 'dataset/SR/output/test'  # High-resolution image output folder
 
 # === Adjust: Classes
 # Class folder names
@@ -82,13 +84,28 @@ output_base_path = 'dataset/SR/output'  # High-resolution image output folder
 #     input_class_path = os.path.join(input_base_path, class_name)  # Input folder path for the class
 #     output_class_path = os.path.join(output_base_path, class_name)  # Output folder path for the class
 
+
+## Train
 # Create output folder if it doesn't exist 
-os.makedirs(output_base_path, exist_ok=True)
+os.makedirs(output_train_base_path, exist_ok=True)
 
 # Process each image in the class folder
-for image_name in os.listdir(input_base_path):
-    lr_image_path = os.path.join(input_base_path, image_name)  # Path to the low-resolution image
-    output_image_path = os.path.join(output_base_path, image_name)  # Path to save the high-resolution image
+for image_name in os.listdir(input_train_base_path):
+    lr_image_path = os.path.join(input_train_base_path, image_name)  # Path to the low-resolution image
+    output_image_path = os.path.join(output_train_base_path, image_name)  # Path to save the high-resolution image
+
+    # Upscale and save the image
+    upscale_image(model, lr_image_path, output_image_path)
+
+
+## Test
+# Create output folder if it doesn't exist 
+os.makedirs(output_test_base_path, exist_ok=True)
+
+# Process each image in the class folder
+for image_name in os.listdir(input_test_base_path):
+    lr_image_path = os.path.join(input_test_base_path, image_name)  # Path to the low-resolution image
+    output_image_path = os.path.join(output_test_base_path, image_name)  # Path to save the high-resolution image
 
     # Upscale and save the image
     upscale_image(model, lr_image_path, output_image_path)

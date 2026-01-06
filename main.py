@@ -34,7 +34,6 @@ def classification():
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     print("-----reduce dataset-----")
     reduce_originals()
     print("-----split original-----")
@@ -52,25 +51,3 @@ if __name__ == "__main__":
     split_SR_output()
     print("-----classification-----")
     classification()
-=======
-    # print("-----reduce dataset-----")
-    # reduce_originals()
-    # print("-----split original-----")
-    # split_original()
-    # print("-----degradation--------")
-    # degradation()
-    # print("-----pairdata-----------")
-    # generate_meta_info_pairdata()
-    # torch.cuda.empty_cache()
-    # print("-----train--------------")
-    # train_SR()
-    # print("-----test---------------")
-    # test_SR()
-    # print("-----split SR output----")
-    # split_SR_output()
-    # print("-----classification-----")
-    # classification()
-    print("-----e2e train test-----")
-    e2e_train_test()
-    # subprocess.run(['python', 'Part2/classification.py'])
->>>>>>> 32a76eee4a7dbd72c1b8cdafb62fdbcb30902fbc

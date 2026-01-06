@@ -48,13 +48,17 @@ def create_test_dataset_from_txt(txt_test, original_dir, test_dataset_dir):
 
 # === Adjust: Folder Paths
 # Paths for the dataset and output directories
-original_dir = 'dataset/SR/output'  # Path to original images
-train_dataset_dir = 'dataset/SR/train'  # Path to save train dataset
-test_dataset_dir = 'dataset/SR/test'  # Path to save test dataset
+original_train_dir = 'dataset/SR/output/train'  # Path to original images
+original_test_dir = 'dataset/SR/output/test'  # Path to original images
+train_dataset_dir = 'dataset/CLS/train'  # Path to save train dataset
+test_dataset_dir = 'dataset/CLS/test'  # Path to save test dataset
 
 # Generate train and test datasets
 # create_dataset_from_txt('../CS_dataset/CS_classification_dataset/CS_classification_data_info/train_images.txt',
 #                                '../CS_dataset/CS_classification_dataset/CS_classification_data_info/test_images.txt',
 #                                original_dir, train_dataset_dir, test_dataset_dir)
-create_dataset_from_txt('dataset/meta_info/gt_train_images.txt', 'dataset/meta_info/gt_test_images.txt',
-                               original_dir, train_dataset_dir, test_dataset_dir)
+create_test_dataset_from_txt('dataset/meta_info/gt_train_images.txt',
+                               original_train_dir, train_dataset_dir)
+
+create_test_dataset_from_txt('dataset/meta_info/gt_test_images.txt',
+                               original_test_dir, test_dataset_dir)

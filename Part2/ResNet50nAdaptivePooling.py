@@ -47,24 +47,23 @@ transform_128 = transforms.Compose([
 # === Adjust: Dataset, Folder path
 # Load training and testing datasets (Real-ESRGAN dataset)
 print("Loading Real-ESRGAN datasets...")
-train_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/SR/train', transform=transform_128)
-test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/SR/test', transform=transform_128)
-# test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/original', transform=transform_128)
+train_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/CLS/train', transform=transform_128)
+test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/CLS/test', transform=transform_128)
 
-targets = np.array(train_dataset_Real_ESRGAN.targets)
-indices = []
+# targets = np.array(train_dataset_Real_ESRGAN.targets)
+# indices = []
 
-for c in range(len(train_dataset_Real_ESRGAN.classes)):
-    class_indices = np.where(targets == c) [0]
-    sample_size = max(1, int(len(class_indices) * 0.2))
-    sampled = random.sample(list(class_indices), sample_size)
-    indices.extend(sampled)
-small_dataset_Real_ESRGAN = Subset(train_dataset_Real_ESRGAN, indices)
+# for c in range(len(train_dataset_Real_ESRGAN.classes)):
+#     class_indices = np.where(targets == c) [0]
+#     sample_size = max(1, int(len(class_indices) * 0.2))
+#     sampled = random.sample(list(class_indices), sample_size)
+#     indices.extend(sampled)
+# small_dataset_Real_ESRGAN = Subset(train_dataset_Real_ESRGAN, indices)
 
-# train_loader_Real_ESRGAN = DataLoader(train_dataset_Real_ESRGAN, batch_size=batch_size, shuffle=True)
-small_train_loader_Real_ESRGAN = DataLoader(train_dataset_Real_ESRGAN, 
-                                            num_workers=num_workers, batch_size=batch_size, 
-                                            shuffle=True)
+train_loader_Real_ESRGAN = DataLoader(train_dataset_Real_ESRGAN, batch_size=batch_size, shuffle=True)
+# small_train_loader_Real_ESRGAN = DataLoader(train_dataset_Real_ESRGAN, 
+#                                             num_workers=num_workers, batch_size=batch_size, 
+#                                             shuffle=True)
 test_loader_Real_ESRGAN = DataLoader(test_dataset_Real_ESRGAN, batch_size=batch_size, shuffle=False)
 
 # === Adjust: Model Name
@@ -152,16 +151,16 @@ def test(model, test_loader, class_names):
 if __name__ == "__main__":
     # Train and test using the Real-ESRGAN dataset
     print("Starting training phase...")
-    train(model_Real_ESRGAN, optimizer_Real_ESRGAN, small_train_loader_Real_ESRGAN)
+    train(model_Real_ESRGAN, optimizer_Real_ESRGAN, train_loader_Real_ESRGAN)
     print("Training completed. Starting testing phase...")
 
-    torch.save(model_Real_ESRGAN.state_dict(), "models/2_Stage_5k_all_loss_state_dict.pth")
-    torch.save(model_Real_ESRGAN, "models/2_Stage_5k_all_loss.pth")
+    torch.save(model_Real_ESRGAN.state_dict(), "models/2_Stage_5k_L1_loss_state_dict.pth")
+    torch.save(model_Real_ESRGAN, "models/2_Stage_5k_L1_loss.pth")
 
-    test_model = torch.load("models/2_Stage_5k_all_loss.pth").to(device)
+    test_model = torch.load("models/2_Stage_5k_L1_loss.pth").to(device)
     # test_model = models.resnet50(pretrained=False)
     # test_model.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
-    test_model.load_state_dict(torch.load("models/2_Stage_5k_all_loss_state_dict.pth"))
+    test_model.load_state_dict(torch.load("models/2_Stage_5k_L1_loss_state_dict.pth"))
     # Get class names
     class_names_Real_ESRGAN = train_dataset_Real_ESRGAN.classes
 

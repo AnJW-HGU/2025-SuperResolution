@@ -1,5 +1,5 @@
 # general settings
-name: 2_Stage_5k_all_loss
+name: 2_Stage_5k_L1_loss
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
@@ -30,7 +30,7 @@ datasets:
     # data loader
     use_shuffle: true
     num_worker_per_gpu: 8
-    batch_size_per_gpu: 4
+    batch_size_per_gpu: 50
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
@@ -108,7 +108,8 @@ train:
       'conv5_4': 1
     vgg_type: vgg19
     use_input_norm: true
-    perceptual_weight: !!float 1.0
+    # perceptual_weight: !!float 1.0
+    perceptual_weight: 0
     style_weight: 0
     range_norm: false
     criterion: l1
@@ -118,7 +119,8 @@ train:
     gan_type: vanilla
     real_label_val: 1.0
     fake_label_val: 0.0
-    loss_weight: !!float 1e-1
+    # loss_weight: !!float 1e-1
+    loss_weight: 0
 
   net_d_iters: 1
   net_d_init_iters: 0
