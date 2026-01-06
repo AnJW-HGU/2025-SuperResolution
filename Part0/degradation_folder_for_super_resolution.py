@@ -17,13 +17,13 @@ def apply_degradation(image):
     """
     # === Adjust: Resize to match the dataset's target size
     # Step 1: Resize to HR target size
-    hr_resized = cv2.resize(image, (576, 576), interpolation=cv2.INTER_CUBIC)
+    hr_resized = cv2.resize(image, (256, 256), interpolation=cv2.INTER_CUBIC)
 
     # Step 2: Blur the image (Gaussian filter)
     blur1 = cv2.GaussianBlur(hr_resized, (15, 15), 0)
     
     # Step 3: Downsample to target LR size using bicubic interpolation
-    lr_resized = cv2.resize(blur1, (144, 144), interpolation=cv2.INTER_CUBIC)
+    lr_resized = cv2.resize(blur1, (64, 64), interpolation=cv2.INTER_CUBIC)
 
     # Step 4: Add Gaussian noise
     noise = np.random.normal(0, 25, lr_resized.shape).astype(np.uint8)

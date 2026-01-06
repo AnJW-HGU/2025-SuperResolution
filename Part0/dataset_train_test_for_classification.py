@@ -9,6 +9,9 @@ import os
 import shutil
 
 def create_dataset_from_txt(txt_train, txt_test, original_dir, train_dataset_dir, test_dataset_dir):
+    original_train_dir = os.path.join(original_dir, 'train')
+    original_test_dir = os.path.join(original_dir, 'test')
+
     # Read train and test image paths from text files
     with open(txt_train, 'r') as f:
         train_images = [line.strip() for line in f.readlines()]
@@ -18,7 +21,7 @@ def create_dataset_from_txt(txt_train, txt_test, original_dir, train_dataset_dir
     # Create train dataset
     for img_path in train_images:
         img_basename = os.path.basename(img_path)
-        src = os.path.join(original_dir, img_basename)
+        src = os.path.join(original_train_dir, img_basename)
         dst = os.path.join(train_dataset_dir, img_path)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copy2(src, dst)
@@ -26,7 +29,7 @@ def create_dataset_from_txt(txt_train, txt_test, original_dir, train_dataset_dir
     # Create test dataset
     for img_path in test_images:
         img_basename = os.path.basename(img_path)
-        src = os.path.join(original_dir, img_basename)
+        src = os.path.join(original_test_dir, img_basename)
         dst = os.path.join(test_dataset_dir, img_path)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copy2(src, dst)
@@ -49,8 +52,8 @@ def create_test_dataset_from_txt(txt_test, original_dir, test_dataset_dir):
 # === Adjust: Folder Paths
 # Paths for the dataset and output directories
 original_dir = 'dataset/SR/output'  # Path to original images
-train_dataset_dir = 'dataset/SR/train'  # Path to save train dataset
-test_dataset_dir = 'dataset/SR/test'  # Path to save test dataset
+train_dataset_dir = 'dataset/CLS/train'  # Path to save train dataset
+test_dataset_dir = 'dataset/CLS/test'  # Path to save test dataset
 
 # Generate train and test datasets
 # create_dataset_from_txt('../CS_dataset/CS_classification_dataset/CS_classification_data_info/train_images.txt',

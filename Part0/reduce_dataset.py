@@ -7,7 +7,7 @@ original_dataset_dir = 'dataset/originals' # Path to the originals images
 reducing_dataset_dir = 'dataset/original' # Path to save reducing dataset
 
 # === Adjust: Reducing Number
-reducing_number = 400
+reducing_number = 20
 
 def reduce_dataset():
     # Get class names from the original dataset
@@ -40,6 +40,3 @@ def reduce_dataset():
     
 if __name__ == "__main__":
     reduce_dataset()
-
-
-

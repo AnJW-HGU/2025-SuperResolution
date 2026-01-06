@@ -1,13 +1,3 @@
-# Class       : 2024-2 Mechatronics Integration Project 
-# Created     : 12/13/2024
-# Author      : Eunji Ko
-# Number      : 22100034
-# Description:
-#               - This code trains and tests a 'ResNet50 + Adaptive Pooling' classification model.
-#               - It used the Real-ESRGAN High Resolution Image Dataset.
-#               - You can modify "# === Adjust" Part as your dataset and environment.
-#               - Input: Train & Test Image Folders / Output: Accuracy, Recall, Precision
-
 import os
 import torch
 import torchvision.transforms as transforms
@@ -27,44 +17,30 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # === Adjust
 # Hyperparameters
-num_epochs = 10
+num_epochs = 20
 num_workers = 12
 batch_size = 8  
 learning_rate = 0.001
 
 # === Adjust: Input Image Size 
-# Image transformation settings (576x576 resolution)
-transform_576 = transforms.Compose([
-    transforms.Resize((576, 576)),  # Resize to 576x576
+# Image transformation settings (256x256 resolution)
+transform_256 = transforms.Compose([
+    transforms.Resize((256, 256)),  # Resize to 256x256
     transforms.ToTensor(),
 ])
 
-transform_128 = transforms.Compose([
-    transforms.Resize((128, 128)),
+transform_64 = transforms.Compose([
+    transforms.Resize((64, 64)),
     transforms.ToTensor(),
 ])
 
 # === Adjust: Dataset, Folder path
 # Load training and testing datasets (Real-ESRGAN dataset)
 print("Loading Real-ESRGAN datasets...")
-train_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/SR/train', transform=transform_128)
-test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/SR/test', transform=transform_128)
-# test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/original', transform=transform_128)
+train_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/CLS/train', transform=transform_256)
+test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/CLS/test', transform=transform_256)
 
-targets = np.array(train_dataset_Real_ESRGAN.targets)
-indices = []
-
-for c in range(len(train_dataset_Real_ESRGAN.classes)):
-    class_indices = np.where(targets == c) [0]
-    sample_size = max(1, int(len(class_indices) * 0.2))
-    sampled = random.sample(list(class_indices), sample_size)
-    indices.extend(sampled)
-small_dataset_Real_ESRGAN = Subset(train_dataset_Real_ESRGAN, indices)
-
-# train_loader_Real_ESRGAN = DataLoader(train_dataset_Real_ESRGAN, batch_size=batch_size, shuffle=True)
-small_train_loader_Real_ESRGAN = DataLoader(train_dataset_Real_ESRGAN, 
-                                            num_workers=num_workers, batch_size=batch_size, 
-                                            shuffle=True)
+train_loader_Real_ESRGAN = DataLoader(train_dataset_Real_ESRGAN, batch_size=batch_size, shuffle=True)
 test_loader_Real_ESRGAN = DataLoader(test_dataset_Real_ESRGAN, batch_size=batch_size, shuffle=False)
 
 # === Adjust: Model Name
@@ -152,16 +128,16 @@ def test(model, test_loader, class_names):
 if __name__ == "__main__":
     # Train and test using the Real-ESRGAN dataset
     print("Starting training phase...")
-    train(model_Real_ESRGAN, optimizer_Real_ESRGAN, small_train_loader_Real_ESRGAN)
+    train(model_Real_ESRGAN, optimizer_Real_ESRGAN, train_loader_Real_ESRGAN)
     print("Training completed. Starting testing phase...")
 
-    torch.save(model_Real_ESRGAN.state_dict(), "models/2_Stage_5k_all_loss_state_dict.pth")
-    torch.save(model_Real_ESRGAN, "models/2_Stage_5k_all_loss.pth")
+    torch.save(model_Real_ESRGAN.state_dict(), "models/2_Stage_200_per_loss_state_dict.pth")
+    torch.save(model_Real_ESRGAN, "models/2_Stage_200_per_loss.pth")
 
-    test_model = torch.load("models/2_Stage_5k_all_loss.pth").to(device)
+    test_model = torch.load("models/2_Stage_200_per_loss.pth", weights_only=False).to(device)
     # test_model = models.resnet50(pretrained=False)
     # test_model.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
-    test_model.load_state_dict(torch.load("models/2_Stage_5k_all_loss_state_dict.pth"))
+    test_model.load_state_dict(torch.load("models/2_Stage_200_per_loss_state_dict.pth"))
     # Get class names
     class_names_Real_ESRGAN = train_dataset_Real_ESRGAN.classes
 
