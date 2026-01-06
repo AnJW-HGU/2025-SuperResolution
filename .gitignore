@@ -1,7 +1,11 @@
 # ignored folders
 datasets/*
-dataset/*
-experiments/*
+dataset/originals/*
+dataset/original/*
+dataset/gt/*
+dataset/lq/*
+dataset/SR/*
+dataset/CLS/*
 results/*
 tb_logger/*
 wandb/*

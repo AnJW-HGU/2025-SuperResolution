@@ -35,7 +35,6 @@ if __name__ == "__main__":
     degradation()
     print("-----pairdata-----------")
     generate_meta_info_pairdata()
-    torch.cuda.empty_cache()
     print("-----train--------------")
     train_E2E()
     print("-----test---------------")
