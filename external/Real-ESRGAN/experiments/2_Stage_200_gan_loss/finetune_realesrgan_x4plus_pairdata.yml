@@ -1,5 +1,9 @@
+# GENERATE TIME: Wed Jan  7 00:26:24 2026
+# CMD:
+# external/Real-ESRGAN/realesrgan/train.py -opt external/Real-ESRGAN/options/finetune_realesrgan_x4plus_pairdata.yml --auto_resume
+
 # general settings
-name: 2_Stage_200_L1_loss
+name: 2_Stage_200_gan_loss
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
@@ -94,7 +98,7 @@ train:
   # losses
   pixel_opt:
     type: L1Loss
-    loss_weight: 0.1
+    loss_weight: 1.0
     reduction: mean
   # perceptual loss (content and style losses)
   perceptual_opt:
@@ -118,7 +122,7 @@ train:
     gan_type: vanilla
     real_label_val: 1.0
     fake_label_val: 0.0
-    loss_weight: !!float 1e-1
+    loss_weight: !!float 1e-2
 
   net_d_iters: 1
   net_d_init_iters: 0
