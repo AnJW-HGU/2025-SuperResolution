@@ -1,4 +1,5 @@
 import os
+import torch
 from basicsr.data.data_util import paired_paths_from_folder, paired_paths_from_lmdb
 from basicsr.data.transforms import augment, paired_random_crop
 from basicsr.utils import FileClient, imfrombytes, img2tensor
@@ -62,10 +63,10 @@ class RealESRGANPairedDataset(data.Dataset):
                 paths = [line.strip() for line in fin]
             self.paths = []
             for path in paths:
-                gt_path, lq_path = path.split(', ')
+                gt_path, lq_path, label = path.split(', ')
                 gt_path = os.path.join(self.gt_folder, gt_path)
                 lq_path = os.path.join(self.lq_folder, lq_path)
-                self.paths.append(dict([('gt_path', gt_path), ('lq_path', lq_path)]))
+                self.paths.append(dict([('gt_path', gt_path), ('lq_path', lq_path), ('label', label)]))
         else:
             # disk backend
             # it will scan the whole folder to get meta info
@@ -86,6 +87,9 @@ class RealESRGANPairedDataset(data.Dataset):
         lq_path = self.paths[index]['lq_path']
         img_bytes = self.file_client.get(lq_path, 'lq')
         img_lq = imfrombytes(img_bytes, float32=True)
+        label_str = self.paths[index]['label']
+        label_map = {'EOSINOPHIL':0, 'LYMPHOCYTE':1, 'MONOCYTE':2, 'NEUTROPHIL':3}
+        label_int = torch.tensor(label_map[label_str], dtype=torch.long)
 
         # augmentation for training
         if self.opt['phase'] == 'train':
@@ -102,7 +106,7 @@ class RealESRGANPairedDataset(data.Dataset):
             normalize(img_lq, self.mean, self.std, inplace=True)
             normalize(img_gt, self.mean, self.std, inplace=True)
 
-        return {'lq': img_lq, 'gt': img_gt, 'lq_path': lq_path, 'gt_path': gt_path}
+        return {'lq': img_lq, 'gt': img_gt, 'lq_path': lq_path, 'gt_path': gt_path, 'label': label_int}
 
     def __len__(self):
         return len(self.paths)

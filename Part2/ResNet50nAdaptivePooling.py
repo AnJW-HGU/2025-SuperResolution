@@ -155,13 +155,13 @@ if __name__ == "__main__":
     train(model_Real_ESRGAN, optimizer_Real_ESRGAN, small_train_loader_Real_ESRGAN)
     print("Training completed. Starting testing phase...")
 
-    torch.save(model_Real_ESRGAN.state_dict(), "models/2_Stage_5k_all_loss_state_dict.pth")
-    torch.save(model_Real_ESRGAN, "models/2_Stage_5k_all_loss.pth")
+    torch.save(model_Real_ESRGAN.state_dict(), "models/2_stage_model_state_dict_5000_02_20.pth")
+    torch.save(model_Real_ESRGAN, "models/2_stage_model_5000_02_20.pth")
 
-    test_model = torch.load("models/2_Stage_5k_all_loss.pth").to(device)
+    test_model = torch.load("models/2_stage_model_5000_02_20.pth").to(device)
     # test_model = models.resnet50(pretrained=False)
     # test_model.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
-    test_model.load_state_dict(torch.load("models/2_Stage_5k_all_loss_state_dict.pth"))
+    test_model.load_state_dict(torch.load("models/2_stage_model_state_dict_5000_02_20.pth"))
     # Get class names
     class_names_Real_ESRGAN = train_dataset_Real_ESRGAN.classes
 

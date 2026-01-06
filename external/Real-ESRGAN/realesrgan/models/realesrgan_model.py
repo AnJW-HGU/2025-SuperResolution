@@ -1,6 +1,8 @@
 import numpy as np
 import random
-import torch
+import torch 
+from torch import nn, optim
+import torchvision.models as models
 from basicsr.data.degradations import random_add_gaussian_noise_pt, random_add_poisson_noise_pt
 from basicsr.data.transforms import paired_random_crop
 from basicsr.models.srgan_model import SRGANModel
@@ -9,6 +11,10 @@ from basicsr.utils.img_process_util import filter2D
 from basicsr.utils.registry import MODEL_REGISTRY
 from collections import OrderedDict
 from torch.nn import functional as F
+
+# === Adjust
+# Hyperparameters
+learning_rate = 0.001
 
 
 @MODEL_REGISTRY.register()
@@ -25,6 +31,33 @@ class RealESRGANModel(SRGANModel):
         self.jpeger = DiffJPEG(differentiable=False).cuda()  # simulate JPEG compression artifacts
         self.usm_sharpener = USMSharp().cuda()  # do usm sharpening
         self.queue_size = opt.get('queue_size', 180)
+
+        # Classification 모델 정의
+        self.num_classes = opt.get('num_classes', 4)
+        self.net_cls = models.resnet50(pretrained=False).to(self.device)
+        self.net_cls.fc = nn.Linear(self.net_cls.fc.in_features, self.num_classes).to(self.device)
+
+        # Loss 및 가중치 설정
+        self.cri_cls = nn.CrossEntropyLoss().to(self.device)
+        self.cls_weight = opt['train'].get('cls_weight', 0.1)
+        
+        # Optimizer 등록
+        self.optimizer_cls = torch.optim.Adam(self.net_cls.parameters(), lr=learning_rate)
+        # self.setup_optimizers()
+
+    # def setup_optimizers(self):
+    #     train_opt = self.opt['train']
+    #     # net_g와 net_cls의 파라미터를 합쳐서 전달
+    #     optim_params = [
+    #         {'params': self.net_g.parameters()},
+    #         {'params': self.net_cls.parameters(), 'lr': train_opt.get('cls_lr', 1e-4)}
+    #     ]
+    #     self.optimizer_g = torch.optim.Adam(optim_params, ...)
+
+    def save(self, epoch, current_iter):
+        super(RealESRGANModel, self).save(epoch, current_iter)
+
+        self.save_network(self.net_cls, 'net_cls', current_iter)
 
     @torch.no_grad()
     def _dequeue_and_enqueue(self):
@@ -68,6 +101,8 @@ class RealESRGANModel(SRGANModel):
         """Accept data from dataloader, and then add two-order degradations to obtain LQ images.
         """
         if self.is_train and self.opt.get('high_order_degradation', True):
+            self.label = data['label'].to(self.device)
+
             # training data synthesis
             self.gt = data['gt'].to(self.device)
             self.gt_usm = self.usm_sharpener(self.gt)
@@ -177,6 +212,7 @@ class RealESRGANModel(SRGANModel):
             self.lq = self.lq.contiguous()  # for the warning: grad and param do not obey the gradient layout contract
         else:
             # for paired training or validation
+            self.label = data['label'].to(self.device)
             self.lq = data['lq'].to(self.device)
             if 'gt' in data:
                 self.gt = data['gt'].to(self.device)
@@ -205,10 +241,13 @@ class RealESRGANModel(SRGANModel):
             p.requires_grad = False
 
         self.optimizer_g.zero_grad()
+        self.optimizer_cls.zero_grad()
+
         self.output = self.net_g(self.lq)
 
         l_g_total = 0
         loss_dict = OrderedDict()
+
         if (current_iter % self.net_d_iters == 0 and current_iter > self.net_d_init_iters):
             # pixel loss
             if self.cri_pix:
@@ -230,8 +269,18 @@ class RealESRGANModel(SRGANModel):
             l_g_total += l_g_gan
             loss_dict['l_g_gan'] = l_g_gan
 
+            # Classification Loss 계산
+            cls_input = F.interpolate(self.output, size=(128, 128), mode='bilinear')
+            cls_output = self.net_cls(cls_input)
+            
+            # 2. Loss 계산
+            l_g_cls = self.cri_cls(cls_output, self.label)
+            l_g_total += l_g_cls * self.opt.get('cls_weight', 0.1) # 가중치 조절
+            loss_dict['l_g_cls'] = l_g_cls
+
             l_g_total.backward()
             self.optimizer_g.step()
+            self.optimizer_cls.step()
 
         # optimize net_d
         for p in self.net_d.parameters():

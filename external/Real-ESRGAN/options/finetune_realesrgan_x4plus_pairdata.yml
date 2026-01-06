@@ -1,5 +1,5 @@
 # general settings
-name: 2_Stage_5k_all_loss
+name: E2E_1_all_loss
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
@@ -29,8 +29,8 @@ datasets:
 
     # data loader
     use_shuffle: true
-    num_worker_per_gpu: 8
-    batch_size_per_gpu: 4
+    num_worker_per_gpu: 4
+    batch_size_per_gpu: 5
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
@@ -82,13 +82,17 @@ train:
     lr: !!float 1e-4
     weight_decay: 0
     betas: [0.9, 0.99]
+  optim_cls:
+    lr: !!float 1e-4
+    weight_decay: 0
+    betas: [0.9, 0.99]
 
   scheduler:
     type: MultiStepLR
     milestones: [5000]
     gamma: 0.5
 
-  total_iter: 5000
+  total_iter: 1
   warmup_iter: -1  # no warm up
 
   # losses
@@ -119,6 +123,11 @@ train:
     real_label_val: 1.0
     fake_label_val: 0.0
     loss_weight: !!float 1e-1
+  # cls loss
+  cls_opt:
+    type: ClsLoss
+    loss_weight: !!float 1e-1
+
 
   net_d_iters: 1
   net_d_init_iters: 0
