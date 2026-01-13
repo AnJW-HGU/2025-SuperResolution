@@ -1,5 +1,5 @@
 # general settings
-name: E2E_200_all_loss
+name: E2E_5k_all_loss
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
@@ -92,7 +92,7 @@ train:
     milestones: [5000]
     gamma: 0.5
 
-  total_iter: 200
+  total_iter: 5000
   warmup_iter: -1  # no warm up
 
   # losses
