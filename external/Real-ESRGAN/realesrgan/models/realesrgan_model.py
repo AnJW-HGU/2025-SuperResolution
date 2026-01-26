@@ -10,6 +10,7 @@ from basicsr.utils.registry import MODEL_REGISTRY
 from collections import OrderedDict
 from torch.nn import functional as F
 
+loss_txt_file = 'log/loss/basic_loss.txt'
 
 @MODEL_REGISTRY.register()
 class RealESRGANModel(SRGANModel):
@@ -229,12 +230,15 @@ class RealESRGANModel(SRGANModel):
             l_g_gan = self.cri_gan(fake_g_pred, True, is_disc=False)
             l_g_total += l_g_gan
             loss_dict['l_g_gan'] = l_g_gan
+            
+            with open(loss_txt_file, 'a') as f:
+                f.write(f"total_g_loss: {l_g_total} ")
 
             l_g_total.backward()
             self.optimizer_g.step()
         
-        if current_iter % 10 == 0:
-            print(f"Current Iter: {current_iter}, l1Loss: {loss_dict['l_g_pix']}, perLoss: {loss_dict['l_g_percep']}, ganLoss: {loss_dict['l_g_gan']}")
+        # if current_iter % 10 == 0:
+        #     print(f"Current Iter: {current_iter}, l1Loss: {loss_dict['l_g_pix']}, perLoss: {loss_dict['l_g_percep']}, ganLoss: {loss_dict['l_g_gan']}")
 
         # optimize net_d
         for p in self.net_d.parameters():
@@ -254,6 +258,9 @@ class RealESRGANModel(SRGANModel):
         loss_dict['out_d_fake'] = torch.mean(fake_d_pred.detach())
         l_d_fake.backward()
         self.optimizer_d.step()
+
+        with open(loss_txt_file, 'a') as f:
+                f.write(f" l_d_real: {loss_dict['l_d_real']} out_d_real: {loss_dict['out_d_real']} l_d_fake: {loss_dict['l_d_fake']} out_d_fake: {loss_dict['out_d_fake']} \n")
 
         if self.ema_decay > 0:
             self.model_ema(decay=self.ema_decay)
