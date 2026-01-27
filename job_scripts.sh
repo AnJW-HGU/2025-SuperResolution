@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH -J=e2e_5k_all_loss      # 작업명 지정
+#SBATCH -J=e2e_75k      # 작업명 지정
 #SBATCH -p cas_v100_4           # queue  name  or  partiton name
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1

@@ -14,6 +14,7 @@ from torch.nn import functional as F
 
 # === Adjust
 # Hyperparameters
+loss_txt_file = 'log/loss/basic_loss.txt'
 learning_rate = 0.1
 
 
@@ -39,7 +40,7 @@ class RealESRGANModel(SRGANModel):
 
         # Loss 및 가중치 설정
         self.cri_cls = nn.CrossEntropyLoss().to(self.device)
-        self.cls_weight = opt['train'].get('cls_weight', 0.1)
+        self.cls_weight = opt['train'].get('cls_weight', 1.0)
         
         # Optimizer 등록
         self.optimizer_cls = torch.optim.Adam(self.net_cls.parameters(), lr=learning_rate)
@@ -241,7 +242,6 @@ class RealESRGANModel(SRGANModel):
             p.requires_grad = False
 
         self.optimizer_g.zero_grad()
-        self.optimizer_cls.zero_grad()
 
         self.output = self.net_g(self.lq)
 
@@ -269,20 +269,28 @@ class RealESRGANModel(SRGANModel):
             l_g_total += l_g_gan
             loss_dict['l_g_gan'] = l_g_gan
 
+            self.optimizer_cls.zero_grad()
+
             # Classification Loss 계산
             cls_input = F.interpolate(self.output, size=(128, 128), mode='bilinear')
             cls_output = self.net_cls(cls_input)
             
             # 2. Loss 계산
             l_g_cls = self.cri_cls(cls_output, self.label)
-            l_g_total += l_g_cls * self.opt.get('cls_weight', 0.1) # 가중치 조절
+
+            with open(loss_txt_file, 'a') as f:
+                f.write(f"cls_loss: {l_g_cls} ")
+            
+
+            l_g_total = l_g_total + l_g_cls * self.cls_weight
             loss_dict['l_g_cls'] = l_g_cls
 
+            with open(loss_txt_file, 'a') as f:
+                f.write(f"total_g_loss: {l_g_total} ")
+
             l_g_total.backward()
-            self.optimizer_g.step()
             self.optimizer_cls.step()
-        if current_iter % 10:
-            print(f"Current Iter: {current_iter}, l1Loss: {loss_dict['l_g_pix']}, perLoss: {loss_dict['l_g_percep']}, ganLoss: {loss_dict['l_g_gan']}, clsLoss: {loss_dict['l_g_cls']}")
+            self.optimizer_g.step()
 
         # optimize net_d
         for p in self.net_d.parameters():
@@ -302,6 +310,9 @@ class RealESRGANModel(SRGANModel):
         loss_dict['out_d_fake'] = torch.mean(fake_d_pred.detach())
         l_d_fake.backward()
         self.optimizer_d.step()
+
+        with open(loss_txt_file, 'a') as f:
+            f.write(f" l_d_real: {loss_dict['l_d_real']} out_d_real: {loss_dict['out_d_real']} l_d_fake: {loss_dict['l_d_fake']} out_d_fake: {loss_dict['out_d_fake']} \n")
 
         if self.ema_decay > 0:
             self.model_ema(decay=self.ema_decay)

@@ -6,6 +6,8 @@ from torch.nn import functional as F
 
 from basicsr.utils.registry import LOSS_REGISTRY
 
+# Hyperparameters
+loss_txt_file = 'log/loss/basic_loss.txt'
 
 @LOSS_REGISTRY.register()
 class GANLoss(nn.Module):
@@ -107,6 +109,9 @@ class GANLoss(nn.Module):
                 loss = -input.mean()
         else:  # other gan types
             loss = self.loss(input, target_label)
+
+        with open(loss_txt_file, 'a') as f:
+                f.write(f"gan_loss: {loss} ")
 
         # loss_weight is always 1.0 for discriminators
         return loss if is_disc else loss * self.loss_weight

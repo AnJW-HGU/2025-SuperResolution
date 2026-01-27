@@ -6,6 +6,9 @@ from basicsr.archs.vgg_arch import VGGFeatureExtractor
 from basicsr.utils.registry import LOSS_REGISTRY
 from .loss_util import weighted_loss
 
+# Hyperparameters
+loss_txt_file = 'log/loss/basic_loss.txt'
+
 _reduction_modes = ['none', 'mean', 'sum']
 
 
@@ -49,7 +52,12 @@ class L1Loss(nn.Module):
             target (Tensor): of shape (N, C, H, W). Ground truth tensor.
             weight (Tensor, optional): of shape (N, C, H, W). Element-wise weights. Default: None.
         """
-        return self.loss_weight * l1_loss(pred, target, weight, reduction=self.reduction)
+        l1_loss_value = l1_loss(pred, target, weight, reduction=self.reduction)
+        
+        with open(loss_txt_file, 'a') as f:
+                f.write(f"l1_loss: {l1_loss_value} ")
+
+        return self.loss_weight * l1_loss_value
 
 
 @LOSS_REGISTRY.register()
@@ -217,6 +225,10 @@ class PerceptualLoss(nn.Module):
                     percep_loss += torch.norm(x_features[k] - gt_features[k], p='fro') * self.layer_weights[k]
                 else:
                     percep_loss += self.criterion(x_features[k], gt_features[k]) * self.layer_weights[k]
+            
+            with open(loss_txt_file, 'a') as f:
+                f.write(f"percep_loss: {percep_loss} ")
+            
             percep_loss *= self.perceptual_weight
         else:
             percep_loss = None
@@ -231,6 +243,10 @@ class PerceptualLoss(nn.Module):
                 else:
                     style_loss += self.criterion(self._gram_mat(x_features[k]), self._gram_mat(
                         gt_features[k])) * self.layer_weights[k]
+            
+            with open(loss_txt_file, 'a') as f:
+                f.write(f"style_loss: {style_loss} ")
+            
             style_loss *= self.style_weight
         else:
             style_loss = None

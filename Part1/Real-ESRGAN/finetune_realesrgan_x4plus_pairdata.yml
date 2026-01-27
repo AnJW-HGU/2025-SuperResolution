@@ -1,5 +1,5 @@
 # general settings
-name: 2_Stage_5k_all_loss
+name: 2_Stage_75k
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
