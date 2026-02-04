@@ -1,5 +1,5 @@
 # general settings
-name: E2E_75k
+name: E2E_100
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
@@ -102,7 +102,7 @@ train:
     milestones: [5000]
     gamma: 0.5
 
-  total_iter: 75000
+  total_iter: 100
   warmup_iter: -1  # no warm up
 
   # losses
