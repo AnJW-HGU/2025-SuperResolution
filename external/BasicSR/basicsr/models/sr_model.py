@@ -23,6 +23,10 @@ class SRModel(BaseModel):
         self.net_g = self.model_to_device(self.net_g)
         self.print_network(self.net_g)
 
+        # define network for classification ## NEW
+        self.net_cls = build_network(opt['network_cls'])
+        self.net_cls = self.model_to_device(self.net_cls)
+
         # load pretrained models
         load_path = self.opt['path'].get('pretrain_network_g', None)
         if load_path is not None:

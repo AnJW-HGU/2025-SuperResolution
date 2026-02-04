@@ -43,6 +43,7 @@ class SRGANModel(SRModel):
             self.load_network(self.net_d, load_path, self.opt['path'].get('strict_load_d', True), param_key)
 
         self.net_g.train()
+        self.net_cls.train()
         self.net_d.train()
 
         # define losses
@@ -63,6 +64,10 @@ class SRGANModel(SRModel):
 
         if train_opt.get('gan_opt'):
             self.cri_gan = build_loss(train_opt['gan_opt']).to(self.device)
+
+        # define cross entropy loss ## NEW
+        if train_opt.get('cross_opt'):
+            self.cri_cross = build_loss(train_opt['cross_opt']).to(self.device)
 
         self.net_d_iters = train_opt.get('net_d_iters', 1)
         self.net_d_init_iters = train_opt.get('net_d_init_iters', 0)

@@ -33,28 +33,6 @@ class RealESRGANModel(SRGANModel):
         self.usm_sharpener = USMSharp().cuda()  # do usm sharpening
         self.queue_size = opt.get('queue_size', 180)
 
-        # Classification 모델 정의
-        self.num_classes = opt.get('num_classes', 4)
-        self.net_cls = models.resnet50(pretrained=False).to(self.device)
-        self.net_cls.fc = nn.Linear(self.net_cls.fc.in_features, self.num_classes).to(self.device)
-
-        # # Loss 및 가중치 설정
-        # self.cri_cls = nn.CrossEntropyLoss().to(self.device)
-        # self.cls_weight = opt['train'].get('cls_weight', 1.0)
-        
-        # Optimizer 등록
-        self.optimizer_cls = torch.optim.Adam(self.net_cls.parameters(), lr=learning_rate)
-        # self.setup_optimizers()
-
-    # def setup_optimizers(self):
-    #     train_opt = self.opt['train']
-    #     # net_g와 net_cls의 파라미터를 합쳐서 전달
-    #     optim_params = [
-    #         {'params': self.net_g.parameters()},
-    #         {'params': self.net_cls.parameters(), 'lr': train_opt.get('cls_lr', 1e-4)}
-    #     ]
-    #     self.optimizer_g = torch.optim.Adam(optim_params, ...)
-
     def save(self, epoch, current_iter):
         super(RealESRGANModel, self).save(epoch, current_iter)
 
@@ -241,8 +219,11 @@ class RealESRGANModel(SRGANModel):
         for p in self.net_d.parameters():
             p.requires_grad = False
 
-        self.optimizer_g.zero_grad()
+        ## NEW
+        for p in self.net_cls.parameters():
+            p.requires_grad = False
 
+        self.optimizer_g.zero_grad()
         self.output = self.net_g(self.lq)
 
         l_g_total = 0
@@ -268,28 +249,18 @@ class RealESRGANModel(SRGANModel):
             l_g_gan = self.cri_gan(fake_g_pred, True, is_disc=False)
             l_g_total += l_g_gan
             loss_dict['l_g_gan'] = l_g_gan
-
-            self.optimizer_cls.zero_grad()
-
-            # Classification Loss 계산
-            cls_input = F.interpolate(self.output, size=(128, 128), mode='bilinear')
-            cls_output = self.net_cls(cls_input)
-            
-            # 2. Loss 계산
-            l_g_cls = self.cri_cls(cls_output, self.label)
-
-            with open(loss_txt_file, 'a') as f:
-                f.write(f"cls_loss: {l_g_cls} ")
-            
-
-            l_g_total = l_g_total + l_g_cls * self.cls_weight
-            loss_dict['l_g_cls'] = l_g_cls
+            # classification loss ## NEW
+            if self.cri_cross:
+                cls_input = F.interpolate(self.output, size=(256, 256), mode='bilinear')
+                cls_output = self.net_cls(cls_input)
+                l_g_cls = self.cri_cross(cls_output, self.label)
+                l_g_total += l_g_cls
+                loss_dict['l_g_cls'] = l_g_cls
 
             with open(loss_txt_file, 'a') as f:
                 f.write(f"total_g_loss: {l_g_total} ")
 
             l_g_total.backward()
-            self.optimizer_cls.step()
             self.optimizer_g.step()
 
         # optimize net_d

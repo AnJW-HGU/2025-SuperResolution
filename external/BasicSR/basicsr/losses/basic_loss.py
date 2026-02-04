@@ -283,7 +283,7 @@ class CrossEntropyLoss(nn.Module):
 
         self.criterion = torch.nn.CrossEntropyLoss()
 
-    def forward(self, pred, target, weight=None, **kwargs):
+    def forward(self, pred, target):
         """
         Args:
             pred (Tensor): of shape (N, C, H, W). Predicted tensor.
