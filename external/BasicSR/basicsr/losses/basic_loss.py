@@ -267,3 +267,32 @@ class PerceptualLoss(nn.Module):
         features_t = features.transpose(1, 2)
         gram = features.bmm(features_t) / (c * h * w)
         return gram
+
+# define cross entropy loss class ## NEW
+@LOSS_REGISTRY.register()
+class CrossEntropyLoss(nn.Module):
+    """Cross entropy loss for classification.
+
+    Args:
+        loss_weight (float): Loss weight for Cross entropy loss. Default: 1.0.
+    """
+
+    def __init__(self, loss_weight=1.0):
+        super(CrossEntropyLoss, self).__init__()
+        self.loss_weight = loss_weight
+
+        self.criterion = torch.nn.CrossEntropyLoss()
+
+    def forward(self, pred, target, weight=None, **kwargs):
+        """
+        Args:
+            pred (Tensor): of shape (N, C, H, W). Predicted tensor.
+            target (Tensor): of shape (N, C, H, W). Ground truth tensor.
+            weight (Tensor, optional): of shape (N, C, H, W). Element-wise weights. Default: None.
+        """
+        cross_loss_value = self.criterion(pred, target)
+        
+        with open(loss_txt_file, 'a') as f:
+                f.write(f"cross_entropy_loss: {cross_loss_value} ")
+
+        return self.loss_weight * cross_loss_value

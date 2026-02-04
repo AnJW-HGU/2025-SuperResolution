@@ -65,6 +65,14 @@ class SRModel(BaseModel):
 
         if self.cri_pix is None and self.cri_perceptual is None:
             raise ValueError('Both pixel and perceptual losses are None.')
+        
+        # define cross entropy loss ## NEW
+        if train_opt.get('cross_opt'):
+            self.cri_cross = build_loss(train_opt['cross_opt']).to(self.device)
+
+        if self.cri_cross is None:
+            raise ValueError('Cross entropy loss is None.')
+
 
         # set up optimizers and schedulers
         self.setup_optimizers()

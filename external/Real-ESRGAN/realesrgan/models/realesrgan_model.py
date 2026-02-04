@@ -38,9 +38,9 @@ class RealESRGANModel(SRGANModel):
         self.net_cls = models.resnet50(pretrained=False).to(self.device)
         self.net_cls.fc = nn.Linear(self.net_cls.fc.in_features, self.num_classes).to(self.device)
 
-        # Loss 및 가중치 설정
-        self.cri_cls = nn.CrossEntropyLoss().to(self.device)
-        self.cls_weight = opt['train'].get('cls_weight', 1.0)
+        # # Loss 및 가중치 설정
+        # self.cri_cls = nn.CrossEntropyLoss().to(self.device)
+        # self.cls_weight = opt['train'].get('cls_weight', 1.0)
         
         # Optimizer 등록
         self.optimizer_cls = torch.optim.Adam(self.net_cls.parameters(), lr=learning_rate)
