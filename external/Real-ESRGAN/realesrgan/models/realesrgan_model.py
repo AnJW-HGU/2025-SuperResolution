@@ -218,10 +218,10 @@ class RealESRGANModel(SRGANModel):
         # optimize net_g
         for p in self.net_d.parameters():
             p.requires_grad = False
-
         ## NEW
         for p in self.net_cls.parameters():
             p.requires_grad = False
+        ## self.net_cls.eval()
 
         self.optimizer_g.zero_grad()
         self.output = self.net_g(self.lq)
@@ -250,8 +250,13 @@ class RealESRGANModel(SRGANModel):
             l_g_total += l_g_gan
             loss_dict['l_g_gan'] = l_g_gan
             # classification loss ## NEW
-            if self.cri_cross:
-                cls_input = F.interpolate(self.output, size=(256, 256), mode='bilinear')
+            if self.cri_cross: # and current_iter > self.opt['cls_start_iter']:
+                cls_input = F.interpolate(self.output, size=(256, 256), mode='bilinear', align_corners=False)
+                # mean = torch.tensor([0.485, 0.456, 0.406], device=self.output.device).view(1,3,1,1)
+                # std  = torch.tensor([0.229, 0.224, 0.225], device=self.output.device).view(1,3,1,1)
+
+                # cls_input = (cls_input - mean) / std
+
                 cls_output = self.net_cls(cls_input)
                 l_g_cls = self.cri_cross(cls_output, self.label)
                 l_g_total += l_g_cls
