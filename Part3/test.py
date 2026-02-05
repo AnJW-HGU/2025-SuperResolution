@@ -18,7 +18,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Hyperparameters
 batch_size = 4 
 
-yml_path = 'external/Real-ESRGAN\experiments/E2E_100/finetune_realesrgan_x4plus_pairdata.yml'
+yml_path = 'external/Real-ESRGAN\experiments/E2E_190k/finetune_realesrgan_x4plus_pairdata.yml'
 
 with open(yml_path, 'r') as f:
     opt = yaml.load(f, Loader=yaml.FullLoader)
@@ -31,8 +31,8 @@ model = RealESRGANModel(opt)
 
 # === Adjust: File Path
 # Path to the model weights
-pth_g_path = 'external/Real-ESRGAN/experiments/E2E_100/models/net_g_latest.pth'
-pth_cls_path = 'external/Real-ESRGAN/experiments/E2E_100/models/net_cls_latest.pth'
+pth_g_path = 'external/Real-ESRGAN/experiments/E2E_190k/models/net_g_latest.pth'
+pth_cls_path = 'external/Real-ESRGAN/experiments/E2E_190k/models/net_cls_latest.pth'
 
 # Load the model weights
 checkpoint_g = torch.load(pth_g_path)

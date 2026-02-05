@@ -220,7 +220,8 @@ class RealESRGANModel(SRGANModel):
             p.requires_grad = False
         ## NEW
         for p in self.net_cls.parameters():
-            p.requires_grad = False
+            # p.requires_grad = False
+            p.requires_grad = True
         ## self.net_cls.eval()
 
         self.optimizer_g.zero_grad()
@@ -259,6 +260,9 @@ class RealESRGANModel(SRGANModel):
 
                 cls_output = self.net_cls(cls_input)
                 l_g_cls = self.cri_cross(cls_output, self.label)
+                if (current_iter % 100 == 0):
+                    with open("log/label/cls_label.txt", 'a') as f:
+                        f.write(f"iter: {current_iter}, gt: {self.label}, pred label: {cls_output}\n")
                 l_g_total += l_g_cls
                 loss_dict['l_g_cls'] = l_g_cls
 
