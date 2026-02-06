@@ -253,10 +253,15 @@ class RealESRGANModel(SRGANModel):
             # classification loss ## NEW
             if self.cri_cross: # and current_iter > self.opt['cls_start_iter']:
                 cls_input = F.interpolate(self.output, size=(256, 256), mode='bilinear', align_corners=False)
-                # mean = torch.tensor([0.485, 0.456, 0.406], device=self.output.device).view(1,3,1,1)
-                # std  = torch.tensor([0.229, 0.224, 0.225], device=self.output.device).view(1,3,1,1)
 
-                # cls_input = (cls_input - mean) / std
+                # Clamp predicted images to [0, 1]
+                cls_input = torch.clamp(cls_input, 0, 1)
+
+                # Normalize predicated images
+                mean = torch.tensor([0.485, 0.456, 0.406], device=self.output.device).view(1,3,1,1)
+                std  = torch.tensor([0.229, 0.224, 0.225], device=self.output.device).view(1,3,1,1)
+
+                cls_input = (cls_input - mean) / std
 
                 cls_output = self.net_cls(cls_input)
                 l_g_cls = self.cri_cross(cls_output, self.label)

@@ -1,5 +1,5 @@
 # general settings
-name: E2E_190k
+name: E2E_120k
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
@@ -33,8 +33,8 @@ datasets:
 
     # data loader
     use_shuffle: true
-    num_worker_per_gpu: 4
-    batch_size_per_gpu: 8
+    num_worker_per_gpu: 16
+    batch_size_per_gpu: 16
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
@@ -102,7 +102,7 @@ train:
     milestones: [5000]
     gamma: 0.5
 
-  total_iter: 190000
+  total_iter: 120000
   warmup_iter: -1  # no warm up
 
   # losses
