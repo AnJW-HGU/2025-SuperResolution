@@ -3,12 +3,11 @@ import torch
 import yaml
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-import torchvision.models as models
+import numpy as np
 from PIL import Image
-from torch import nn
 from torch.utils.data import DataLoader
 from realesrgan.models.realesrgan_model import RealESRGANModel
-from sklearn.metrics import precision_score, recall_score
+from sklearn.metrics import confusion_matrix, precision_score, recall_score
 
 # === Adjust: GPU number
 # GPU configuration (uses GPU set via CUDA_VISIBLE_DEVICES)
@@ -16,9 +15,9 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # === Adjust
 # Hyperparameters
-batch_size = 4 
+batch_size = 8
 
-yml_path = 'external/Real-ESRGAN\experiments/E2E_120k/finetune_realesrgan_x4plus_pairdata.yml'
+yml_path = 'models/e2e/wo/finetune_realesrgan_x4plus_pairdata.yml'
 
 with open(yml_path, 'r') as f:
     opt = yaml.load(f, Loader=yaml.FullLoader)
@@ -31,20 +30,31 @@ model = RealESRGANModel(opt)
 
 # === Adjust: File Path
 # Path to the model weights
-pth_g_path = 'external/Real-ESRGAN/experiments/E2E_120k/models/net_g_latest.pth'
-pth_cls_path = 'external/Real-ESRGAN/experiments/E2E_120k/models/net_cls_latest.pth'
+pth_g_path = 'models/e2e/wo/net_g_60000.pth'
+pth_cls_path = 'models/e2e/wo/net_cls_60000.pth'
 
 # Load the model weights
-checkpoint_g = torch.load(pth_g_path)
-checkpoint_cls = torch.load(pth_cls_path)
-model.net_g.load_state_dict(checkpoint_g['params_ema']) 
-# model.net_cls.load_state_dict(checkpoint_cls['params_ema']) 
+checkpoint_g = torch.load(pth_g_path, map_location=device)
+checkpoint_cls = torch.load(pth_cls_path, map_location=device)
+
+if 'params_ema' in checkpoint_g:
+    model.net_g.load_state_dict(checkpoint_g['params_ema'])  # Use the appropriate key
+elif 'params' in checkpoint_g:
+    model.net_g.load_state_dict(checkpoint_g['params'])  # Use the appropriate key
+else:
+    model.net_g.load_state_dict(checkpoint_g)  # Use the appropriate key
+
+if 'params_ema' in checkpoint_cls:
+    model.net_cls.load_state_dict(checkpoint_cls['params_ema'])  # Use the appropriate key
+elif 'params' in checkpoint_cls:
+    model.net_cls.load_state_dict(checkpoint_cls['params'])  # Use the appropriate key
+else:
+    model.net_cls.load_state_dict(checkpoint_cls)  # Use the appropriate key
 
 # Confirm the model is loaded
 print("Model weights loaded successfully.")
 
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model.net_g.to(device)
 model.net_cls.to(device)
 model.net_g.eval()
@@ -94,7 +104,7 @@ def test(model, test_loader, class_names):
         for images, labels in test_loader:
             images, labels = images.to(device), labels.to(device)
             sr_images = model.net_g(images)
-            cls_outputs = model.net_cls(sr_images.data)
+            cls_outputs = model.net_cls(sr_images)
             _, predicted = torch.max(cls_outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
@@ -109,19 +119,35 @@ def test(model, test_loader, class_names):
             all_labels.extend(labels.cpu().numpy())
             all_preds.extend(predicted.cpu().numpy())
 
+    cm = confusion_matrix(all_labels, all_preds)
+
+    class_accuracy = []
+    num_classes = len(class_names)
+    total_samples = np.sum(cm)
+
+    for i in range(num_classes):
+        TP = cm[i, i]
+        FN = np.sum(cm[i, :]) - TP
+        FP = np.sum(cm[:, i]) - TP
+        TN = total_samples - (TP + FP + FN)
+
+        acc_i = (TP + TN) / total_samples
+        class_accuracy.append(acc_i)
+
+
     # Calculate overall accuracy
-    accuracy = correct / total
+    accuracy = np.mean(class_accuracy)
 
     # Calculate precision and recall per class
-    precision_per_class = precision_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None)
-    recall_per_class = recall_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None)
+    precision_per_class = precision_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None, zero_division=0)
+    recall_per_class = recall_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None, zero_division=0)
 
     # Print per-class metrics
     print("\nClass-wise Metrics:")
     for i, class_name in enumerate(class_names):
-        class_acc = class_correct[i] / class_total[i] if class_total[i] > 0 else 0
+        # class_acc = class_correct[i] / class_total[i] if class_total[i] > 0 else 0
         print(f"  {class_name}:")
-        print(f"    Accuracy: {class_acc * 100:.2f}%")
+        print(f"    Accuracy: {class_accuracy[i] * 100:.2f}%")
         print(f"    Precision: {precision_per_class[i] * 100:.2f}%")
         print(f"    Recall: {recall_per_class[i] * 100:.2f}%")
 
