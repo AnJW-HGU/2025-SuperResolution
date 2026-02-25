@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from torch.utils.data import Subset
+from torchvision.models import ResNet50_Weights
 import random
 import numpy as np
 from sklearn.metrics import precision_score, recall_score
@@ -24,28 +25,23 @@ learning_rate = 0.001
 
 # === Adjust: Input Image Size 
 # Image transformation settings (256x256 resolution)
-transform_256 = transforms.Compose([
-    transforms.Resize((256, 256)),  # Resize to 256x256
-    transforms.ToTensor(),
-])
-
-transform_64 = transforms.Compose([
-    transforms.Resize((64, 64)),
+transform_HR = transforms.Compose([
+    transforms.Resize((640, 480)),  # Resize to 256x256
     transforms.ToTensor(),
 ])
 
 # === Adjust: Dataset, Folder path
 # Load training and testing datasets (Real-ESRGAN dataset)
 print("Loading Real-ESRGAN datasets...")
-train_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/CLS/train', transform=transform_256)
-test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/CLS/test', transform=transform_256)
+train_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/CLS/train', transform=transform_HR)
+test_dataset_Real_ESRGAN = datasets.ImageFolder('dataset/CLS/test', transform=transform_HR)
 
 train_loader_Real_ESRGAN = DataLoader(train_dataset_Real_ESRGAN, batch_size=batch_size, shuffle=True)
 test_loader_Real_ESRGAN = DataLoader(test_dataset_Real_ESRGAN, batch_size=batch_size, shuffle=False)
 
 # === Adjust: Model Name
 # Configure the ResNet model for the Real-ESRGAN dataset
-model_Real_ESRGAN = models.resnet50(pretrained=False)
+model_Real_ESRGAN = models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
 model_Real_ESRGAN.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
 model_Real_ESRGAN = model_Real_ESRGAN.to(device)
 
@@ -131,13 +127,13 @@ if __name__ == "__main__":
     train(model_Real_ESRGAN, optimizer_Real_ESRGAN, train_loader_Real_ESRGAN)
     print("Training completed. Starting testing phase...")
 
-    torch.save(model_Real_ESRGAN.state_dict(), "models/2_Stage_100k_state_dict.pth")
-    torch.save(model_Real_ESRGAN, "models/2_Stage_100k.pth")
+    torch.save(model_Real_ESRGAN.state_dict(), "models/2_Stage_64k_state_dict.pth")
+    torch.save(model_Real_ESRGAN, "models/2_Stage_64k.pth")
 
-    test_model = torch.load("models/2_Stage_100k.pth", weights_only=False).to(device)
+    test_model = torch.load("models/2_Stage_64k.pth", weights_only=False).to(device)
     # test_model = models.resnet50(pretrained=False)
     # test_model.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
-    test_model.load_state_dict(torch.load("models/2_Stage_100k_state_dict.pth"))
+    test_model.load_state_dict(torch.load("models/2_Stage_64k_state_dict.pth"))
     # Get class names
     class_names_Real_ESRGAN = train_dataset_Real_ESRGAN.classes
 

@@ -34,14 +34,14 @@ def classification():
 
 
 if __name__ == "__main__":
-    # print("-----reduce dataset-----")
-    # reduce_originals()
-    # print("-----split original-----")
-    # split_original()
-    # print("-----degradation--------")
-    # degradation()
-    # print("-----pairdata-----------")
-    # generate_meta_info_pairdata()
+    print("-----reduce dataset-----")
+    reduce_originals()
+    print("-----split original-----")
+    split_original()
+    print("-----degradation--------")
+    degradation()
+    print("-----pairdata-----------")
+    generate_meta_info_pairdata()
     print("-----train--------------")
     train_SR()
     print("-----test---------------")

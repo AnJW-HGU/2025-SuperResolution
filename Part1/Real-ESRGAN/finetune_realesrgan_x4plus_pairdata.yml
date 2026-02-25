@@ -1,5 +1,5 @@
 # general settings
-name: 2_Stage_100k
+name: 2_Stage_64k
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1

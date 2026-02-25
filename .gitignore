@@ -11,6 +11,8 @@ tb_logger/*
 wandb/*
 tmp/*
 weights/*
+models/*
+log/loss/*
 
 version.py
 
