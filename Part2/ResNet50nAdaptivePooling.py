@@ -3,13 +3,11 @@ import torch
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-import torch.nn.functional as F
 from torch import nn, optim
 from torch.utils.data import DataLoader
-from torch.utils.data import Subset
-import random
+from torchvision.models import ResNet50_Weights
 import numpy as np
-from sklearn.metrics import precision_score, recall_score
+from sklearn.metrics import confusion_matrix, precision_score, recall_score
 
 # === Adjust: GPU number
 # GPU configuration (uses GPU set via CUDA_VISIBLE_DEVICES)
@@ -18,7 +16,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # === Adjust
 # Hyperparameters
 num_epochs = 20
-num_workers = 12
+num_workers = 16
 batch_size = 8  
 learning_rate = 0.001
 
@@ -45,7 +43,7 @@ test_loader_Real_ESRGAN = DataLoader(test_dataset_Real_ESRGAN, batch_size=batch_
 
 # === Adjust: Model Name
 # Configure the ResNet model for the Real-ESRGAN dataset
-model_Real_ESRGAN = models.resnet50(pretrained=False)
+model_Real_ESRGAN = models.resnet50(weights=ResNet50_Weights.DEFAULT)
 model_Real_ESRGAN.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
 model_Real_ESRGAN = model_Real_ESRGAN.to(device)
 
@@ -103,19 +101,35 @@ def test(model, test_loader, class_names):
             all_labels.extend(labels.cpu().numpy())
             all_preds.extend(predicted.cpu().numpy())
 
+    cm = confusion_matrix(all_labels, all_preds)
+
+    class_accuracy = []
+    num_classes = len(class_names)
+    total_samples = np.sum(cm)
+
+    for i in range(num_classes):
+        TP = cm[i, i]
+        FN = np.sum(cm[i, :]) - TP
+        FP = np.sum(cm[:, i]) - TP
+        TN = total_samples - (TP + FP + FN)
+
+        acc_i = (TP + TN) / total_samples
+        class_accuracy.append(acc_i)
+
+
     # Calculate overall accuracy
-    accuracy = correct / total
+    accuracy = np.mean(class_accuracy)
 
     # Calculate precision and recall per class
-    precision_per_class = precision_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None)
-    recall_per_class = recall_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None)
+    precision_per_class = precision_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None, zero_division=0)
+    recall_per_class = recall_score(all_labels, all_preds, labels=list(range(len(class_names))), average=None, zero_division=0)
 
     # Print per-class metrics
     print("\nClass-wise Metrics:")
     for i, class_name in enumerate(class_names):
-        class_acc = class_correct[i] / class_total[i] if class_total[i] > 0 else 0
+        # class_acc = class_correct[i] / class_total[i] if class_total[i] > 0 else 0
         print(f"  {class_name}:")
-        print(f"    Accuracy: {class_acc * 100:.2f}%")
+        print(f"    Accuracy: {class_accuracy[i]*100:.2f}%")
         print(f"    Precision: {precision_per_class[i] * 100:.2f}%")
         print(f"    Recall: {recall_per_class[i] * 100:.2f}%")
 
@@ -131,19 +145,20 @@ if __name__ == "__main__":
     train(model_Real_ESRGAN, optimizer_Real_ESRGAN, train_loader_Real_ESRGAN)
     print("Training completed. Starting testing phase...")
 
-    torch.save(model_Real_ESRGAN.state_dict(), "models/2_Stage_100k_state_dict.pth")
-    torch.save(model_Real_ESRGAN, "models/2_Stage_100k.pth")
+    # torch.save(model_Real_ESRGAN.state_dict(), "models/2_Stage_100k_state_dict.pth")
+    # torch.save(model_Real_ESRGAN, "models/2_Stage_100k.pth")
 
-    test_model = torch.load("models/2_Stage_100k.pth", weights_only=False).to(device)
-    # test_model = models.resnet50(pretrained=False)
-    # test_model.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
-    test_model.load_state_dict(torch.load("models/2_Stage_100k_state_dict.pth"))
+    # test_model = torch.load("models/2_Stage_100k.pth", weights_only=False).to(device)
+    # # test_model = models.resnet50(pretrained=False)
+    # # test_model.fc = nn.Linear(model_Real_ESRGAN.fc.in_features, len(train_dataset_Real_ESRGAN.classes))
+    # test_model.load_state_dict(torch.load("models/2_Stage_100k_state_dict.pth"))
+    
     # Get class names
     class_names_Real_ESRGAN = train_dataset_Real_ESRGAN.classes
 
     # === Adjust: Print 
     # Test the model and display results
-    accuracy_Real_ESRGAN, precision_Real_ESRGAN, recall_Real_ESRGAN = test(test_model, test_loader_Real_ESRGAN, class_names_Real_ESRGAN)
+    accuracy_Real_ESRGAN, precision_Real_ESRGAN, recall_Real_ESRGAN = test(model_Real_ESRGAN, test_loader_Real_ESRGAN, class_names_Real_ESRGAN)
     print(f"\nOverall Accuracy for Real-ESRGAN dataset: {accuracy_Real_ESRGAN * 100:.2f}%")
     print(f"Overall Precision for Real-ESRGAN dataset: {precision_Real_ESRGAN * 100:.2f}%")
     print(f"Overall Recall for Real-ESRGAN dataset: {recall_Real_ESRGAN * 100:.2f}%")

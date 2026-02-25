@@ -2,9 +2,13 @@ import yaml
 import torch
 from realesrgan.models.realesrgan_model import RealESRGANModel
 
+# === Adjust: GPU number
+# GPU configuration (uses GPU set via CUDA_VISIBLE_DEVICES)
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 # === Adjust: File Path
 # Path to the configuration file
-yml_path = 'external/Real-ESRGAN/experiments/2_Stage_100k/finetune_realesrgan_x4plus_pairdata.yml'
+yml_path = 'models/2_stage_gan/finetune_realesrgan_x4plus_pairdata.yml'
 
 # Load settings from the YML file
 with open(yml_path, 'r') as f:
@@ -19,11 +23,16 @@ model = RealESRGANModel(opt)
 
 # === Adjust: File Path
 # Path to the model weights
-pth_path = 'external/Real-ESRGAN/experiments/2_Stage_100k/models/net_g_latest.pth'
+pth_path = 'models/2_stage_gan/net_g_latest.pth'
 
 # Load the model weights
-checkpoint = torch.load(pth_path)
-model.net_g.load_state_dict(checkpoint['params_ema'])  # Use the appropriate key
+checkpoint = torch.load(pth_path, map_location=device)
+if 'params_ema' in checkpoint:
+    model.net_g.load_state_dict(checkpoint['params_ema'])  # Use the appropriate key
+elif 'params' in checkpoint:
+    model.net_g.load_state_dict(checkpoint['params'])  # Use the appropriate key
+else:
+    model.net_g.load_state_dict(checkpoint)  # Use the appropriate key
 
 # Confirm the model is loaded
 print("Model weights loaded successfully.")
