@@ -231,8 +231,8 @@ class RealESRGANModel(SRGANModel):
             l_g_total += l_g_gan
             loss_dict['l_g_gan'] = l_g_gan
             
-            with open(loss_txt_file, 'a') as f:
-                f.write(f"total_g_loss: {l_g_total} ")
+            # with open(loss_txt_file, 'a') as f:
+            #     f.write(f"total_g_loss: {l_g_total} ")
 
             l_g_total.backward()
             self.optimizer_g.step()
@@ -259,8 +259,8 @@ class RealESRGANModel(SRGANModel):
         l_d_fake.backward()
         self.optimizer_d.step()
 
-        with open(loss_txt_file, 'a') as f:
-                f.write(f" l_d_real: {loss_dict['l_d_real']} out_d_real: {loss_dict['out_d_real']} l_d_fake: {loss_dict['l_d_fake']} out_d_fake: {loss_dict['out_d_fake']} \n")
+        # with open(loss_txt_file, 'a') as f:
+        #         f.write(f" l_d_real: {loss_dict['l_d_real']} out_d_real: {loss_dict['out_d_real']} l_d_fake: {loss_dict['l_d_fake']} out_d_fake: {loss_dict['out_d_fake']} \n")
 
         if self.ema_decay > 0:
             self.model_ema(decay=self.ema_decay)

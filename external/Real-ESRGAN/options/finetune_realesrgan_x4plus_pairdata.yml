@@ -1,5 +1,5 @@
 # general settings
-name: 2_Stage_100k
+name: 2_Stage_GAN_only
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
@@ -23,14 +23,14 @@ datasets:
     io_backend:
       type: disk
 
-    gt_size: 256
+    gt_size: 480
     use_hflip: True
     use_rot: False
 
     # data loader
     use_shuffle: true
-    num_worker_per_gpu: 4
-    batch_size_per_gpu: 8
+    num_worker_per_gpu: 4 # orig = 16
+    batch_size_per_gpu: 4 # orig = 16
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
@@ -74,12 +74,12 @@ train:
   ema_decay: 0.999
   optim_g:
     type: Adam
-    lr: !!float 1e-4
+    lr: !!float 1e-3
     weight_decay: 0
     betas: [0.9, 0.99]
   optim_d:
     type: Adam
-    lr: !!float 1e-4
+    lr: !!float 1e-3
     weight_decay: 0
     betas: [0.9, 0.99]
 
@@ -88,13 +88,13 @@ train:
     milestones: [5000]
     gamma: 0.5
 
-  total_iter: 100000
+  total_iter: 120000
   warmup_iter: -1  # no warm up
 
   # losses
   pixel_opt:
     type: L1Loss
-    loss_weight: 1.0
+    loss_weight: 0.0
     reduction: mean
   # perceptual loss (content and style losses)
   perceptual_opt:
@@ -108,7 +108,7 @@ train:
       'conv5_4': 1
     vgg_type: vgg19
     use_input_norm: true
-    perceptual_weight: !!float 1.0
+    perceptual_weight: !!float 0.0
     style_weight: 0
     range_norm: false
     criterion: l1
@@ -118,7 +118,7 @@ train:
     gan_type: vanilla
     real_label_val: 1.0
     fake_label_val: 0.0
-    loss_weight: !!float 1e-1
+    loss_weight: !!float 2.0
 
   net_d_iters: 1
   net_d_init_iters: 0

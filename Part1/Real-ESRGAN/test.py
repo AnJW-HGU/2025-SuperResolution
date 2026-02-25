@@ -8,7 +8,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # === Adjust: File Path
 # Path to the configuration file
-yml_path = 'models/2_stage_gan/finetune_realesrgan_x4plus_pairdata.yml'
+yml_path = 'external/Real-ESRGAN/experiments/2_Stage_64k/finetune_realesrgan_x4plus_pairdata.yml'
 
 # Load settings from the YML file
 with open(yml_path, 'r') as f:
@@ -23,7 +23,7 @@ model = RealESRGANModel(opt)
 
 # === Adjust: File Path
 # Path to the model weights
-pth_path = 'models/2_stage_gan/net_g_latest.pth'
+pth_path = 'external/Real-ESRGAN/experiments/2_Stage_100k/models/net_g_latest.pth'
 
 # Load the model weights
 checkpoint = torch.load(pth_path, map_location=device)

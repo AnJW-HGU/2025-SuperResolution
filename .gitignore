@@ -12,6 +12,7 @@ wandb/*
 tmp/*
 weights/*
 models/*
+log/loss/*
 
 version.py
 
