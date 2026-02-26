@@ -5,13 +5,7 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 from torch import nn, optim
 from torch.utils.data import DataLoader
-<<<<<<< HEAD
 from torchvision.models import ResNet50_Weights
-=======
-from torch.utils.data import Subset
-from torchvision.models import ResNet50_Weights
-import random
->>>>>>> eab61dcee9d84944cf017cb865383f30cdd8a5ba
 import numpy as np
 from sklearn.metrics import confusion_matrix, precision_score, recall_score
 

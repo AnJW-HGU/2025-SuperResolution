@@ -1,5 +1,5 @@
 # general settings
-name: 2_Stage_GAN_only
+name: 2_Stage_L1_only
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
@@ -29,8 +29,8 @@ datasets:
 
     # data loader
     use_shuffle: true
-    num_worker_per_gpu: 4 # orig = 16
-    batch_size_per_gpu: 4 # orig = 16
+    num_worker_per_gpu: 16 # orig = 16
+    batch_size_per_gpu: 16 # orig = 16
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
@@ -94,7 +94,7 @@ train:
   # losses
   pixel_opt:
     type: L1Loss
-    loss_weight: 0.0
+    loss_weight: !!float 10.0
     reduction: mean
   # perceptual loss (content and style losses)
   perceptual_opt:
@@ -118,7 +118,7 @@ train:
     gan_type: vanilla
     real_label_val: 1.0
     fake_label_val: 0.0
-    loss_weight: !!float 2.0
+    loss_weight: !!float 0.0
 
   net_d_iters: 1
   net_d_init_iters: 0
