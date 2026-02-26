@@ -18,13 +18,13 @@ def apply_degradation(image_path):
         return None
 
     # Resize HR to 2048x2048
-    hr_resized = cv2.resize(image, (640, 480), interpolation=cv2.INTER_CUBIC)
+    hr_resized = cv2.resize(image, (640, 640), interpolation=cv2.INTER_CUBIC)
 
     # Step 2: Blur (Gaussian filter)
     blur1 = cv2.GaussianBlur(hr_resized, (15, 15), 0)
 
     # Step 3: Resize (downsample to 512x512 using bicubic)
-    lr_resized = cv2.resize(blur1, (160, 120), interpolation=cv2.INTER_CUBIC)
+    lr_resized = cv2.resize(blur1, (160, 160), interpolation=cv2.INTER_CUBIC)
 
     # Step 4: Add Gaussian noise
     noise = np.random.normal(0, 25, lr_resized.shape).astype(np.uint8)

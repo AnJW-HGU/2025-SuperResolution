@@ -23,7 +23,7 @@ learning_rate = 0.001
 # === Adjust: Input Image Size 
 # Image transformation settings (256x256 resolution)
 transform_HR = transforms.Compose([
-    transforms.Resize((640, 480)),  # Resize to 256x256
+    transforms.Resize((640, 640)),  # Resize to 256x256
     transforms.ToTensor(),
 ])
 
