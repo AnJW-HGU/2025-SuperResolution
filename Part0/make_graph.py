@@ -51,6 +51,7 @@ def parse_log(file_path):
             # 4. Iteration 계산 (줄 번호 * 100)
             if row:
                 row['iteration'] = (i + 1) * 100
+                # row['iteration'] = i + 1
                 data.append(row)
 
     df = pd.DataFrame(data)
@@ -104,7 +105,8 @@ def plot_loss_analysis(df, max_iter=None, selected_losses=None, smoothing_window
 
 # --- 실행 부분 ---
 # 실제 파일 경로를 여기에 입력하세요
-file_path = 'models/2_stage/2_Stage_120k_loss.txt' 
+# file_path = 'external\\Real-ESRGAN\\experiments\\2_Stage_L1_only_archived_20260226_114447\\train_2_Stage_L1_only_20260226_114347.log' 
+file_path = 'log/loss/basic_loss.txt' 
 
 df = parse_log(file_path)
 
@@ -113,14 +115,15 @@ if not df.empty:
     # 보고 싶은 loss만 골라서 리스트에 넣으세요
     # 첫 번째 gan_loss는 그냥 'gan_loss'로 저장되어 있습니다.
     # TARGET_LOSSES = ['l1_loss', 'percep_loss', 'gan_loss'] 
+    # TARGET_LOSSES = ['l_g_pix'] 
     TARGET_LOSSES = ['l1_loss'] 
     TARGET_LOSSES2 = ['percep_loss'] 
-    TARGET_LOSSES3 = ['gan_loss'] 
+    # TARGET_LOSSES3 = ['gan_loss'] 
     TARGET_LOSSES4 = ['total_g_loss'] 
     TARGET_LOSSES5 = ['l_d_real', 'l_d_fake'] 
     
-    plot_loss_analysis(df, max_iter=50000, selected_losses=TARGET_LOSSES)
-    plot_loss_analysis(df, max_iter=50000, selected_losses=TARGET_LOSSES2)
-    plot_loss_analysis(df, max_iter=50000, selected_losses=TARGET_LOSSES3)
-    plot_loss_analysis(df, max_iter=50000, selected_losses=TARGET_LOSSES4)
-    plot_loss_analysis(df, max_iter=50000, selected_losses=TARGET_LOSSES5)
+    plot_loss_analysis(df, max_iter=12000, selected_losses=TARGET_LOSSES)
+    plot_loss_analysis(df, max_iter=12000, selected_losses=TARGET_LOSSES2)
+    # plot_loss_analysis(df, max_iter=50000, selected_losses=TARGET_LOSSES3)
+    plot_loss_analysis(df, max_iter=12000, selected_losses=TARGET_LOSSES4)
+    plot_loss_analysis(df, max_iter=12000, selected_losses=TARGET_LOSSES5)
